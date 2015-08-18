@@ -1,0 +1,38 @@
+<div class="card" id="users_card" style="margin-top:41px;">
+    <h3>Users</h3>
+    <div class="input-group">
+        <input type="text" class="form-control" id="search_users" placeholder="Search Users">
+        <div class="input-group-addon search" id="search_link"><img src="img/search.png" alt="Search Users"></div>
+    </div>
+    <div id="error_space_admin" class="error" ></div>
+    <hr/>
+    <div class="form-group">
+        <label for="email_address">Username</label>
+        <input type="text" class="form-control" id="email_address" placeholder="Username">
+         <label for="real_name">Name</label>
+        <input type="text" class="form-control" id="real_name" placeholder="Name">
+        <label for="user_role">Role</label>
+        <select id="user_role" class="form-control">
+            <option value="seller">Seller</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="admin">Admin</option>
+        </select>
+        <!--
+         <label for="product_categories">Product Categories</label>
+        <select id="product_categories" class="form-control">
+            <option value="all">All</option>
+        </select>
+         <div id="product_categories_display"></div>
+        -->
+    </div>
+    <div class="input-group button_area">
+        <input type="button" id="create_user_btn" value="Create User" class="btn btn-info"/>
+        <input type="button" id="update_user_btn" value="Update User" class="btn btn-info"/>
+        <input type="button" id="enable_user_btn" value="Enable User" class="btn btn-info"/>
+        <input type="button" id="disable_user_btn" value="Disable User" class="btn btn-info"/>
+        <input type="button" id="delete_user_btn" value="Delete User" class="btn btn-info"/>
+        <input type="button" id="reset_user_btn" value="Reset Password" class="btn btn-info"/>
+       <!--  <input type="button" id="add_category_btn" value="Add Category" class="btn btn-info"/> -->
+    </div>
+
+</div>

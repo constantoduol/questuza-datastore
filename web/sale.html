@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sale</title>
+      <link rel='shortcut icon' type='image/x-icon' href='img/favicon.png' />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="quest pico" />
+    <link href='css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+    <link href="css/roboto.min.css" rel="stylesheet">
+    <link href="css/material.min.css" rel="stylesheet">
+    <link href="css/ripples.min.css" rel="stylesheet">
+    <link href='css/jquery-ui.css' rel='stylesheet' type='text/css'>
+    <link href='css/handson.css' rel='stylesheet' type='text/css'>
+    <link href='css/pos.css' rel='stylesheet' type='text/css'>
+
+    <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap3-typeahead.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.js"></script>
+    <script type="text/javascript" src="js/handson.js"></script>
+    <script type="text/javascript" src="js/excel.js"></script>
+    <script type="text/javascript" src="js/ui.js"></script>
+    <script type="text/javascript" src="js/onload.js"></script>
+    <script type="text/javascript" src="js/app-flow.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/admin.js"></script>
+    <script type="text/javascript" src="js/sale.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/printThis.js"></script>
+    <script type="text/javascript" src="js/ripples.js"></script>
+    <script type="text/javascript" src="js/material.js"></script>
+    </head>
+    <body style="padding:0px">
+        <div id="content_area" style='margin-top: 0px'>
+            <div class="card_touch" id="menu_card">
+                <a href="#" id="logout_link" class="btn btn_touch" title="Sign Out" style="background-color: rgba(255, 0, 0, 0.6)">Sign out</a> 
+                <a href="#" id="home_link" class="btn btn_touch btn-info">Home</a> 
+                <a href="#" id="todays_sale_link" class="btn btn_touch btn-info">T/Sales</a> 
+                <a href="#" id="users_report_link" class="btn btn_touch btn-info" style="visibility: hidden">U/Reports</a> 
+                <a id="total_qty" class="btn btn_touch change_touch" style="visibility: hidden">0</a>
+                <a id="total_amount" class="btn btn_touch change_touch" style="visibility: hidden" >0</a>
+                <a href="#" id="commit_link" class="btn btn_touch btn-info" style="visibility:  hidden">Commit</a> 
+                <a href="#" id="clear_sale_link" class="btn btn_touch btn-info" style="visibility:  hidden">Clear Sale</a>
+            </div>
+
+            <div class="card_touch" id="product_category_card" style="overflow: auto">
+                <div id="error_space_sale" class="error" ></div>
+                <table id="category_area" >
+
+                </table>
+                <div id="product_display_area" >
+
+                </div>
+            </div>
+            <div class="card_touch" id="current_sale_card"  style="overflow: auto">
+
+            </div>
+        </div>
+    </body>
+</html>
