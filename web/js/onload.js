@@ -27,7 +27,7 @@ AppData.prototype.onload = {
         app.pages.users = "/views/user.html";
         app.pages.business = "/views/business.html";
         app.pages.expenses = "/views/expenses.html";
-        app.pages.stock_history = "/views/stock_history.html";
+        app.pages.reports = "/views/reports.html";
         app.pages.paginate = "/views/paginate.html";
         app.pages.billing = "/views/billing.html";
         app.pages.pay_bill = "/views/pay_bill.html";
@@ -109,6 +109,7 @@ AppData.prototype.onload = {
     },
     "/views/billing.html": function () {
         $("#billing_pay_btn").click(app.payBill);
+        $("#billing_history_btn").click(app.billingHistory);
     },
     "/views/pay_bill.html": function () {
         $("#verify_trans_btn").click(app.verifyPayBill);
@@ -124,24 +125,17 @@ AppData.prototype.onload = {
         app.sub_context = app.appData.formData.sale.product;
         $("#product_display_area").html("");
         $("#category_area").html("");
-        app.loadCategories("category_area", "category");
+        app.fetchBusinessSettings();
+        app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category");
+        
         $("#home_link").click(function () {
             $("#category_area").html("");
             $("#product_display_area").html("");
-            app.loadCategories("category_area", "category");
+            app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category");
         });
 
         $("#clear_sale_link").click(function () {
-            $("#category_area").html("");
-            $("#product_display_area").html("");
-            $("#current_sale_card").html("");
-            $("#commit_link").css("visibility", "hidden");
-            $("#total_qty").css("visibility", "hidden");
-            $("#total_amount").css("visibility", "hidden");
-            $("#clear_sale_link").css("visibility", "hidden");
-            $("#total_qty").html("0");
-            $("#total_amount").html("0.00");
-            app.loadCategories("category_area", "category");
+            app.clearSale();
         });
 
         $("#commit_link").click(app.commitSale);
@@ -165,6 +159,7 @@ AppData.prototype.onload = {
                         m.modal('hide');
                     }
                 });
+
                 app.xhr({category_type: "category"}, "" + app.dominant_privilege + "," + app.dominant_privilege + "", "all_users,product_categories", {
                     load: false,
                     success: function (data) {
@@ -223,26 +218,37 @@ AppData.prototype.onload = {
             });
         }
 
-        //check billing
-        app.xhr({}, "open_data_service", "fetch_account_balance", {
+        //check billing and settings
+        app.xhr({}, "open_data_service,open_data_service", "fetch_account_balance,fetch_settings", {
             load: false,
             success: function (resp) {
-                var amount = parseFloat(resp.response.data.balance);
-                var timestamp = parseInt(resp.response.data.timestamp);
+                var amount = parseFloat(resp.response.open_data_service_fetch_account_balance.data.balance);
+                var timestamp = parseInt(resp.response.open_data_service_fetch_account_balance.data.timestamp);
                 var diff = $.now() - timestamp;
                 if (amount > 0 && diff > 604800000) { //one week after invoicing
                     //tell the user about this
-                    app.ui.modal("Your account is in arrears,Please pay your bill<br> Amount Due : " + amount + "", "Billing", {
+                    var m = app.ui.modal("Your account is in arrears<br>Please pay your bill<br> Amount Due : Kshs " + app.formatMoney(amount) + "", "Billing", {
                         okText: "Pay Now",
                         cancelText: "Pay Later",
                         ok: function () {
-                            app.loadPage({load_url: app.pages.billing, load_area: 'content_area'});
+                            m.modal('hide');
+                            app.loadPage({
+                                load_url: app.pages.billing,
+                                load_area: 'content_area',
+                                onload : function(){
+                                    $("#billing_pay_btn").click();
+                                }
+                            });
                         },
                         cancel: function () {
 
                         }
                     });
                 }
+                
+                var r = resp.response.open_data_service_fetch_settings.data;
+                localStorage.setItem("settings", JSON.stringify(r));
+                
             }
         });
     },
@@ -295,7 +301,7 @@ AppData.prototype.onload = {
                 var r = resp.response.data.PRODUCT_CATEGORY;
                 if(!r) return;
                 $("#product_categories").html("");
-                $("#product_categories").append($("<option value='all'>All</option>"));
+                $("#product_categories").append($("<option value='all'>All Categories</option>"));
                 $.each(r, function (index) {
                     var cat = r[index];
                     $("#product_categories").append($("<option value=" + cat + ">" + cat + "</option>"));
@@ -316,15 +322,15 @@ AppData.prototype.onload = {
         app.setUpAuto(app.context.service_product.fields.product_category);
         app.setUpAuto(app.context.service_product.fields.product_sub_category);
         app.setUpAuto(app.context.service_product.fields.product_parent);
-        if (localStorage.getItem("track_stock") === "0") {
+        if (app.getSetting("track_stock") === "0") {
             $("#product_quantity").remove();
             $("#product_quantity_label").remove();
         }
         app.xhr({category_type: "category"}, app.dominant_privilege, "product_categories", {
             load: false,
             success: function (resp) {
-                console.log(resp);
                 var r = resp.response.data.PRODUCT_CATEGORY;
+                if(!r) return;
                 $("#product_categories").html("");
                 $("#product_categories").append($("<option value='all'>All</option>"));
                 $.each(r, function (index) {
@@ -367,6 +373,9 @@ AppData.prototype.onload = {
         $("#delete_business_btn").click(function () {
             app.saveBusiness("delete");
         });
+        
+        $("#settings_business_btn").click(app.loadSettings);
+        
         $("#country").html("");
         $.each(app.nations, function (index) {
             var nation = app.nations[index];
@@ -408,17 +417,17 @@ AppData.prototype.onload = {
         $("#user_name").val(app.getUrlParameter("user_name"));
         $("#old_password").val(app.getUrlParameter("pass_word"));
     },
-    "/views/stock_history.html": function () {
-        app.sub_context = app.context.stock_history;
+    "/views/reports.html": function () {
+        app.sub_context = app.context.reports;
         $("#stock_history_btn").click(app.stockHistory);
         $("#stock_expiry_btn").click(function () {
-            app.stockExpiry(app.pages.stock_history);
+            app.stockExpiry(app.pages.reports);
         });
         $("#stock_low_btn").click(function () {
-            app.stockLow(app.pages.stock_history);
+            app.stockLow(app.pages.reports);
         });
         $("#search_link").click(function () {
-            app.allProducts(app.pages.stock_history);
+            app.allProducts(app.pages.reports);
         });
 
         $("#report_type").change(function () {
@@ -433,7 +442,7 @@ AppData.prototype.onload = {
 
         app.setUpDate("start_date"); //no limit
         app.setUpDate("end_date"); //no limit
-        app.setUpAuto(app.context.stock_history.fields.search_products);
+        app.setUpAuto(app.context.reports.fields.search_products);
         var bType = app.appData.formData.login.current_user.business_type;
         if (bType === "services") {
             $("#stock_low_btn").remove();

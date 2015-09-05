@@ -15,6 +15,7 @@ import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.quest.access.common.UniqueRandom;
 import com.quest.access.common.datastore.Datastore;
+import com.quest.access.common.io;
 import com.quest.access.control.Server;
 import com.quest.access.useraccess.Serviceable;
 import com.quest.access.useraccess.services.Message;
@@ -516,33 +517,36 @@ public class PosAdminService implements Serviceable {
                 return;
             }
 
-            SortDirection sd = orderDir.equals("ASC") ? SortDirection.ASCENDING : SortDirection.DESCENDING;
+            //SortDirection sd = orderDir.equals("ASC") ? SortDirection.ASCENDING : SortDirection.DESCENDING;
             ArrayList<Filter> aFilters = new ArrayList<Filter>();
             for (int x = 0; x < whereCols.length(); x++) {
                 String col = whereCols.optString(x);
                 String value = whereValues.optString(x);
                 String operator = whereOps.optString(x);
-
                 Filter filter = new FilterPredicate(col, Datastore.getFilterOperator(operator), value);
                 aFilters.add(filter);
             }
+            Filter busFilter = new FilterPredicate("BUSINESS_ID", Datastore.getFilterOperator("="), busId);
+            aFilters.add(busFilter);
+            
             Filter[] filters = new Filter[aFilters.size()];
             filters = aFilters.toArray(filters);
-            JSONObject data = Datastore.entityToJSON(Datastore.getMultipleEntities(entity, orderBy, sd, FetchOptions.Builder.withLimit(limit), filters));
-            JSONArray busIds = data.optJSONArray("BUSINESS_ID");
-            if (busIds != null) {
-                for (int x = 0; x < busIds.length(); x++) {
-                    String id = busIds.optString(x);
-                    if (!id.equals(busId)) {
-                        data.optJSONArray("BUSINESS_ID").put(x, null);
-                        Iterator<String> iter = data.keys();
-                        while (iter.hasNext()) {
-                            String key = iter.next();
-                            data.optJSONArray(key).put(x, null);
-                        }
-                    }
-                }
-            }
+            JSONObject data = Datastore.entityToJSON(Datastore.getMultipleEntities(entity,FetchOptions.Builder.withLimit(limit), filters));
+            
+//            JSONArray busIds = data.optJSONArray("BUSINESS_ID");
+//            if (busIds != null) {
+//                for (int x = 0; x < busIds.length(); x++) {
+//                    String id = busIds.optString(x);
+//                    if (!id.equals(busId)) {
+//                        data.optJSONArray("BUSINESS_ID").put(x, null);
+//                        Iterator<String> iter = data.keys();
+//                        while (iter.hasNext()) {
+//                            String key = iter.next();
+//                            data.optJSONArray(key).put(x, null);
+//                        }
+//                    }
+//                }
+//            }
             worker.setResponseData(data);
             serv.messageToClient(worker);
         } catch (Exception ex) {
@@ -752,12 +756,12 @@ public class PosAdminService implements Serviceable {
 
     }
 
-    private JSONObject getAccountBalance(ClientWorker worker, String table, String column) throws JSONException, ParseException {
+    private JSONObject getAccountBalance(ClientWorker worker, String entity, String column) throws JSONException, ParseException {
         //get the amount of taxes or commissions earned for the specified period
         JSONObject requestData = worker.getRequestData();
-        String beginDate = requestData.optString("start_date") + ":00";
+        String beginDate = requestData.optString("start_date") + " 00:00:00";
         String busId = requestData.optString("business_id");
-        String endDate = requestData.optString("end_date") + ":59";
+        String endDate = requestData.optString("end_date") + " 23:59:59";
 
         String lbeginDate = toTimestamp(beginDate);
         String lendDate = toTimestamp(endDate);
@@ -766,17 +770,19 @@ public class PosAdminService implements Serviceable {
         Filter filter1 = new FilterPredicate("CREATED", FilterOperator.GREATER_THAN_OR_EQUAL, lbeginDate);
         Filter filter2 = new FilterPredicate("CREATED", FilterOperator.LESS_THAN_OR_EQUAL, lendDate);
 
-        JSONObject data = Datastore.entityToJSON(Datastore.getMultipleEntities(table, filter, filter1, filter2));
+        JSONObject data = Datastore.entityToJSON(Datastore.getMultipleEntities(entity, filter, filter1, filter2));
         JSONArray col = data.optJSONArray(column);
         double total = 0;
-        for (int x = 0; x < col.length(); x++) {
-            double value = col.optDouble(x, 0);
-            total += value;
+        if(col != null){
+            for (int x = 0; x < col.length(); x++) {
+                double value = col.optDouble(x, 0);
+                total += value;
+            }
         }
         String resourceName = "auto expense";
-        if (table.equals("COMMISSION_DATA")) {
+        if (entity.equals("COMMISSION_DATA")) {
             resourceName = "Commissions";
-        } else if (table.equals("TAX_DATA")) {
+        } else if (entity.equals("TAX_DATA")) {
             resourceName = "Taxes";
         }
         JSONObject obj = new JSONObject();
@@ -801,9 +807,9 @@ public class PosAdminService implements Serviceable {
 
     private JSONObject generateExpensesAndIncomes(ClientWorker worker) throws JSONException, ParseException {
         JSONObject requestData = worker.getRequestData();
-        String beginDate = requestData.optString("start_date") + " 00";
+        String beginDate = requestData.optString("start_date") + " 00:00:00";
         String busId = requestData.optString("business_id");
-        String endDate = requestData.optString("end_date") + " 59";
+        String endDate = requestData.optString("end_date") + " 23:59:59";
 
         String lbeginDate = toTimestamp(beginDate);
         String lendDate = toTimestamp(endDate);
@@ -839,13 +845,10 @@ public class PosAdminService implements Serviceable {
     @Endpoint(name = "profit_and_loss")
     public void profitAndLoss(Server serv, ClientWorker worker) throws JSONException, ParseException {
         JSONObject requestData = worker.getRequestData();
-        String beginDate = requestData.optString("start_date") + "00:00:00";
+        String beginDate = requestData.optString("start_date") + " 00:00:00";
         String busId = requestData.optString("business_id");
-        String endDate = requestData.optString("end_date") + "23:59:59";
+        String endDate = requestData.optString("end_date") + " 23:59:59";
         String bType = requestData.optString("business_type");
-
-        String allSql = "SELECT STOCK_COST_BP,STOCK_COST_SP,TRAN_FLAG FROM STOCK_DATA WHERE"
-                + " STOCK_DATA.BUSINESS_ID = ? AND STOCK_DATA.CREATED >= ? AND STOCK_DATA.CREATED <= ? ";
 
         Float costOfGoodsBought = 0F;
         Float costOfGoodsSold = 0F;
@@ -954,7 +957,7 @@ public class PosAdminService implements Serviceable {
         serv.messageToClient(worker);
     }
     
-        @Endpoint(name = "product_categories", shareMethodWith = {"pos_sale_service", "pos_middle_service"})
+    @Endpoint(name = "product_categories", shareMethodWith = {"pos_sale_service", "pos_middle_service"})
     public void loadCategories(Server serv, ClientWorker worker) {
         JSONObject requestData = worker.getRequestData();
         String catType = requestData.optString("category_type");

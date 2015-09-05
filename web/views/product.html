@@ -14,21 +14,28 @@
         <label for="product_name">Product Name</label>
         <input type="text" class="form-control" id="product_name" placeholder="Product Name">
 
-        <label for="product_quantity">Quantity</label>
-        <input type="number" class="form-control" id="product_quantity" placeholder="Quantity">
-        
-         <label for="product_category">Product Category</label>
-        <input type="text" class="form-control" id="product_category" placeholder="Product Category">
-        
-        <label for="product_sub_category">Product Sub Category</label>
-        <input type="text" class="form-control" id="product_sub_category" placeholder="Product Sub Category">
-        
+        <label for="product_quantity_div">Quantity</label>
+        <div id="product_quantity_div" style="display:flex">
+            <span id="current_product_quantity" class="info_badge" style="width: 10%">0.0</span>
+            <select id="product_quantity_type" style="width:20%;margin-right: 10px">
+                <option value="increase">Increase By</option>
+                <option value="decrease">Decrease By</option>
+            </select>
+            <input type="number"  id="product_quantity" placeholder="Quantity added/removed" style="width:70%" class="form-control">
+        </div>
         
         <label for="product_bp_unit_cost">Buying Unit Cost</label>
         <input type="number" class="form-control" id="product_bp_unit_cost" placeholder="Buying Unit Cost">
 
         <label for="product_sp_unit_cost">Selling Unit Cost</label>
         <input type="number" class="form-control" id="product_sp_unit_cost" placeholder="Selling Unit Cost">
+        
+        <label for="product_category">Product Category</label>
+        <input type="text" class="form-control" id="product_category" placeholder="Product Category">
+        
+        <label for="product_sub_category">Product Sub Category</label>
+        <input type="text" class="form-control" id="product_sub_category" placeholder="Product Sub Category">
+        
 
         <label for="product_reminder_limit">Low Stock Reminder Limit</label>
         <input type="number" class="form-control" id="product_reminder_limit" placeholder="Product Reminder Limit">

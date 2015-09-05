@@ -26,6 +26,7 @@ App.prototype.xhr = function (data, svc, msg, func) {
     request.request_header.request_svc = svc;
     request.request_header.request_msg = msg;
     request.request_header.session_id = localStorage.getItem("session_id");
+    data.business_id = localStorage.getItem("business_id");
     request.request_object = data;
     if (func.load) {
         var loadArea = $("#" + app.context.load_area);
@@ -138,7 +139,7 @@ App.prototype.scrollTo = function (id) {
     if (!$("#" + id)[0])
         return;
     $('html,body').animate({
-        scrollTop: $("#" + id).offset().top - 55},
+        scrollTop: $("#" + id).offset().top - 70},
     'slow');
 };
 
@@ -363,8 +364,7 @@ App.prototype.print = function (options) {
 
 App.prototype.defaultAutoHandler = function (autoHandler, data, index) {
     //{id : key, id : key}
-    console.log(autoHandler);
-    console.log(data);
+
     $.each(autoHandler.fields, function (id) {
         var key = autoHandler.fields[id];
         var value = data[key[0]][index];
@@ -380,7 +380,7 @@ App.prototype.defaultAutoHandler = function (autoHandler, data, index) {
         else if (key[1] === "money") {
             value = app.formatMoney(value);
         }
-        $("#" + id).val(value);
+        key[2] === "html" ? $("#" + id).html(value) : $("#" + id).val(value); 
     });
 };
 
@@ -392,6 +392,53 @@ App.prototype.getSetting = function(name){
     else {
         return "0";
     }
+};
+
+
+App.prototype.renderDom = function (obj, toAppend) {
+    var elem;
+    if (!obj.type)
+        return;
+    var inputs = ["text", "date", "number", "time", "button"];
+    var label = $("<label>");
+    label.append(obj.label);
+    !obj.label ? null : toAppend.append(label);
+    if (obj.type === "select") {
+        elem = $("<select>");
+        $.each(obj.option_names, function (x) {
+            var option = $("<option>");
+            option.attr("value", obj.option_values[x]);
+            option.html(obj.option_names[x]);
+            elem.append(option);
+        });
+    }
+    else if (inputs.indexOf(obj.type.trim()) > -1) {
+        elem = $("<input type='" + obj.type + "'>");
+        elem.val(obj.value);
+    }
+    else {
+        elem = $(obj.type);
+    }
+    !obj["class"] ? null : elem.addClass(obj["class"]);
+    !obj.style ? null : elem.attr("style", obj.style);
+    !obj.id ? null : elem.attr("id", obj.id);
+    //bind events
+    if (obj.events) {
+        //do something
+        $.each(obj.events, function (event) {
+            elem.bind(event, obj.events[event]);
+        });
+    }
+    toAppend.append(elem);
+};
+
+App.prototype.briefShow = function (options) {
+    var m = app.ui.modal(options.content, options.title, {
+    });
+    var delay = !options.delay ? 3000 : options.delay;
+    app.runLater(delay, function () {
+        m.modal('hide');
+    });
 };
 
 

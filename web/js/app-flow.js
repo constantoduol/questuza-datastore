@@ -173,7 +173,7 @@ AppData.prototype.formData = {
                     autocomplete_handler: {
                         fields: {
                             product_name: ["PRODUCT_NAME", "string"],
-                            product_quantity: ["PRODUCT_QTY", "number"],
+                            current_product_quantity: ["PRODUCT_QTY", "number","html"],
                             product_category: ["PRODUCT_CATEGORY", "string"],
                             product_sub_category: ["PRODUCT_CATEGORY", "string"],
                             product_bp_unit_cost: ["BP_UNIT_COST", "money"],
@@ -233,13 +233,17 @@ AppData.prototype.formData = {
                         where_values: function () {
                             return [$("#product_parent").val()];
                         },
-                        where_cols: ["PRODUCT_PARENT"],
+                        where_cols: ["PRODUCT_NAME"],
                         where_operators: [">="],
                         orderby: "PRODUCT_NAME",
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
-                        data: {}
+                        data: {},
+                        after: function (data, index) {
+                            var prodId = data.ID[index];
+                            $("#product_parent").attr("current-item", prodId);
+                        }
                     }
                 },
                 product_sp_unit_cost: {required: true, message: "Product selling price per unit is required", sign: "+"},
@@ -273,7 +277,7 @@ AppData.prototype.formData = {
                     autocomplete_handler: {
                         fields: {
                             product_name: ["PRODUCT_NAME", "string"],
-                            product_quantity: ["PRODUCT_QTY", "number"],
+                            current_product_quantity: ["PRODUCT_QTY", "number","html"],
                             product_category: ["PRODUCT_CATEGORY", "string"],
                             product_sub_category: ["PRODUCT_CATEGORY", "string"],
                             product_bp_unit_cost: ["BP_UNIT_COST", "money"],
@@ -286,15 +290,15 @@ AppData.prototype.formData = {
                         },
                         after: function (data, index) {
                             var parentId = data.PRODUCT_PARENT[index];
-                            console.log(parentId);
                             $("#product_parent").attr("current-item", parentId);
                             app.fetchItemById({
-                                database: "pos_data",
-                                table: "PRODUCT_DATA",
-                                column: "*",
-                                where: function () {
-                                    var id = app.appData.formData.login.current_user.business_id;
-                                    return "ID = '" + parentId + "' AND BUSINESS_ID = '" + id + "'";
+                                entity: "PRODUCT_DATA",
+                                columns: ["*"],
+                                where_cols: function () {
+                                    return ["ID"];
+                                },
+                                where_values: function () {
+                                    return [parentId];
                                 },
                                 success: function (data) {
                                     var r = data.response.data;
@@ -351,13 +355,17 @@ AppData.prototype.formData = {
                         where_values: function () {
                             return [$("#product_parent").val()];
                         },
-                        where_cols: ["PRODUCT_PARENT"],
+                        where_cols: ["PRODUCT_NAME"],
                         where_operators: [">="],
                         orderby: "PRODUCT_NAME",
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
-                        data: {}
+                        data: {},
+                        after: function (data, index) {
+                            var prodId = data.ID[index];
+                            $("#product_parent").attr("current-item", prodId);
+                        }
                     }
                 },
                 product_bp_unit_cost: {required: true, message: "Product buying price per unit is required", sign: "+"},
@@ -436,20 +444,20 @@ AppData.prototype.formData = {
                 user_interface: {required: false}
             }
         },
-        stock_history: {
+        reports: {
             fields: {
                 report_type: {required: true, message: "Report type is required"},
                 start_date: {required: true, message: "Start date is required"},
                 end_date: {required: true, message: "End date is required"},
                 product_categories: {required: true, message: "Product category is required"},
-                search_stock: {
+                search_products: {
                     required: false,
                     autocomplete: {
-                        id: "search_stock",
+                        id: "search_products",
                         entity: "PRODUCT_DATA",
                         column: ["*"],
                         where_values: function () {
-                            return [$("#search_stock").val()];
+                            return [$("#search_products").val()];
                         },
                         where_cols: ["PRODUCT_NAME"],
                         where_operators: [">="],
@@ -457,7 +465,13 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
-                        data: {}
+                        data: {},
+                        after: function (data, index) {
+                            var prodId = data.ID[index];
+                            var name = data.PRODUCT_NAME[index];
+                            $("#product_parent").val(name);
+                            $("#product_parent").attr("current-item", prodId);
+                        }
                     }
                 }
             }
@@ -471,7 +485,7 @@ AppData.prototype.formData = {
                     autocomplete: {
                         id: "expense_name",
                         entity: "EXPENSE_DATA",
-                        column: "RESOURCE_NAME",
+                        column: ["RESOURCE_NAME"],
                         where_values: function () {
                             return [$("#expense_name").val(), $("#resource_type").val()];
                         },

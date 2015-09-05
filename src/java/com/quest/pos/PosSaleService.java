@@ -5,20 +5,17 @@
  */
 package com.quest.pos;
 
-import com.google.appengine.api.datastore.Key;
-import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.quest.access.common.UniqueRandom;
-import com.quest.access.common.io;
 import com.quest.access.common.datastore.Datastore;
+import com.quest.access.common.io;
 import com.quest.access.control.Server;
 import com.quest.access.useraccess.Serviceable;
 import com.quest.access.useraccess.services.Message;
 import com.quest.access.useraccess.services.annotations.Endpoint;
 import com.quest.access.useraccess.services.annotations.WebService;
-import com.quest.access.useraccess.verification.UserAction;
 import com.quest.servlets.ClientWorker;
 import java.util.Date;
 
@@ -122,7 +119,7 @@ public class PosSaleService implements Serviceable {
                   
                 }
                 
-                String [] props = new String[]{"BUSINESS_ID","PRODUCT_ID","TRAN_TYPE","STOCK_COST_BP","STOCK_COST_SP","STOCK_QTY","PROFIT","TRAN_FLAG","NARRATION","CREATED","USER_NAME"};
+                String [] props = new String[]{"TRANS_ID","BUSINESS_ID","PRODUCT_ID","TRAN_TYPE","STOCK_COST_BP","STOCK_COST_SP","STOCK_QTY","PROFIT","TRAN_FLAG","NARRATION","CREATED","USER_NAME"};
                 String [] values = new String[]{transId,busId, prodId, type, bPrice.toString(), cost.toString(), unitsSold.toString(),
                     profit.toString(),tranFlag, narration, ((Long)System.currentTimeMillis()).toString(),userName};
                 

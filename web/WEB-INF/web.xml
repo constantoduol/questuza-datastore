@@ -89,34 +89,6 @@
             <param-value>initial</param-value>
         </init-param>
          <init-param>
-            <param-name>online-database-username</param-name>
-            <param-value>apps</param-value>
-        </init-param>
-        <init-param>
-            <param-name>online-database-password</param-name>
-            <param-value>thelonelymt</param-value>
-        </init-param>
-        <init-param>
-            <param-name>offline-database-username</param-name>
-            <param-value>root</param-value>
-        </init-param>
-         <init-param>
-            <param-name>database-driver</param-name>
-            <param-value>com.mysql.jdbc.Driver</param-value>
-        </init-param>
-        <init-param>
-            <param-name>offline-database-password</param-name>
-            <param-value/>
-        </init-param>
-        <init-param>
-            <param-name>online-jdbc</param-name>
-            <param-value>jdbc:mysql://23.229.186.73:3306/</param-value>
-        </init-param>
-         <init-param>
-            <param-name>offline-jdbc</param-name>
-            <param-value>jdbc:mysql://127.0.0.1:3306/</param-value>
-        </init-param>
-         <init-param>
             <param-name>template-request</param-name>
             <param-value>{"request_header":{"request_svc":"","request_msg":"","session_id":""},"request_object":{}}</param-value>
         </init-param>

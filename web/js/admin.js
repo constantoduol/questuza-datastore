@@ -45,58 +45,57 @@ App.prototype.activateProduct = function(){
     });
 };
 
-App.prototype.settings = function () {
+App.prototype.saveSettings = function () {
+    var data = app.getFormData(app.context.settings);
+    if (!data) return;
+    var request = {};
+    $.each(app.settings, function (key) {
+        request[key] = data[key].value;
+    });
+    app.xhr(request, "open_data_service", "save_settings", {
+        load: false,
+        success: function (resp) {
+            var r = resp.response.data;
+            if (r === "success") {
+                alert("Settings saved successfully");
+            }
+            else if (r === "fail") {
+                alert(resp.response.reason);
+            }
+        }
+    });
+};
+
+
+App.prototype.loadSettings = function () {
     app.paginate({
         title: "Settings",
         save_state: true,
         save_state_area: "content_area",
         onload_handler: app.pages.business,
         onload: function () {
-            app.loadPage({
-                load_url: app.pages.settings,
-                load_area: "paginate_body",
-                onload: function () {
-                    $("#paginate_print").remove();
-                    app.xhr({}, "open_data_service", "fetch_settings", {
-                        load: false,
-                        success: function (resp) {
-                            var r = resp.response.data;
-                            $.each(r.CONF_KEY,function(x){
-                                $("#"+r.CONF_KEY[x]).val(r.CONF_VALUE[x]);
-                            });
-                        }
+            $("#paginate_print").remove();
+            app.context.settings.fields = app.settings;
+            var settingsArea = $("<div id='settings_area'>");
+            $("#paginate_body").append(settingsArea);
+            //render settings from app.settings
+            $.each(app.settings, function (setting) {
+                app.renderDom(app.settings[setting], settingsArea);
+            });
+            app.xhr({}, "open_data_service", "fetch_settings", {
+                load: false,
+                success: function (resp) {
+                    var r = resp.response.data;
+                    if(!r.CONF_KEY) return;
+                    $.each(r.CONF_KEY, function (x) {
+                        $("#" + r.CONF_KEY[x]).val(r.CONF_VALUE[x]);
                     });
-                    
-                    $("#save_settings_btn").click(function(){
-                        var data = app.getFormData(app.context.settings);
-                        if(!data) return;
-                        var request = {
-                            enable_undo_sales : data.enable_undo_sales.value,
-                            add_tax : data.add_tax.value,
-                            add_comm : data.add_comm.value,
-                            add_purchases : data.add_purchases.value,
-                            track_stock : data.track_stock.value,
-                            user_interface : data.user_interface.value
-                        };
-                        app.xhr(request,"open_data_service","save_settings",{
-                            load : false,
-                            success : function(resp){
-                                var r = resp.response.data;
-                                if(r === "success"){
-                                    alert("Settings saved successfully");
-                                }
-                                else if(r === "fail"){
-                                    alert(resp.response.reason);
-                                }
-                            }
-                        });
-                    });
-
                 }
             });
         }
     });
 };
+
 
 
 
@@ -802,7 +801,7 @@ App.prototype.allProducts = function (handler) {
 
 
 App.prototype.goodsStockHistory = function () {
-    var data = app.getFormData(app.context.stock_history);
+    var data = app.getFormData(app.context.reports);
     var id = $("#search_products").attr("current-item");
     id = $("#search_products").val().trim() === ""  ? "all" : id;
     if (!data)
@@ -829,7 +828,7 @@ App.prototype.goodsStockHistory = function () {
                 title: "Stock History",
                 save_state: true,
                 save_state_area: "content_area",
-                onload_handler: app.pages.stock_history,
+                onload_handler: app.pages.reports,
                 onload: function () {
                     var totalQty = 0;
                     var totalSP = 0;
@@ -866,7 +865,7 @@ App.prototype.goodsStockHistory = function () {
 
                         flag === "sale_to_customer" ? undos.push(undo) : undos.push("");
 
-                        var time = new Date(resp.CREATED[index]).toLocaleString();
+                        var time = new Date(parseInt(resp.CREATED[index])).toLocaleString();
                         resp.CREATED[index] = time;
 
                         resp.STOCK_QTY[index] = "<span style='color :" + color + "'>" + resp.STOCK_QTY[index] + "</span>";
@@ -914,7 +913,7 @@ App.prototype.goodsStockHistory = function () {
 };
 
 App.prototype.servicesStockHistory = function () {
-    var data = app.getFormData(app.context.stock_history);
+    var data = app.getFormData(app.context.reports);
     var id = $("#search_products").attr("current-item");
     id = $("#search_products").val().trim() === ""  ? "all" : id;
     if (!data)
@@ -941,7 +940,7 @@ App.prototype.servicesStockHistory = function () {
                 title: "Stock History",
                 save_state: true,
                 save_state_area: "content_area",
-                onload_handler: app.pages.stock_history,
+                onload_handler: app.pages.reports,
                 onload: function () {
                     var totalQty = 0;
                     var totalSP = 0;
@@ -972,7 +971,7 @@ App.prototype.servicesStockHistory = function () {
 
                         type === "0" ? undos.push(undo) : undos.push("");
 
-                        var time = new Date(resp.CREATED[index]).toLocaleString();
+                        var time = new Date(parseInt(resp.CREATED[index])).toLocaleString();
                         resp.CREATED[index] = time;
 
                         resp.STOCK_QTY[index] = "<span style='color :" + color + "'>" + resp.STOCK_QTY[index] + "</span>";
@@ -1026,7 +1025,7 @@ App.prototype.stockHistory = function () {
                     title: "Commissions",
                     save_state: true,
                     save_state_area: "content_area",
-                    onload_handler: app.pages.stock_history,
+                    onload_handler: app.pages.reports,
                     onload: function () {
                         var totalComm = 0, units = 0;
                         $.each(resp.COMM_VALUE,function(x){
@@ -1071,7 +1070,7 @@ App.prototype.stockHistory = function () {
                     title: "Taxes",
                     save_state: true,
                     save_state_area: "content_area",
-                    onload_handler: app.pages.stock_history,
+                    onload_handler: app.pages.reports,
                     onload: function () {
                         var totalTax = 0, units = 0;
                         $.each(resp.TAX_VALUE,function(x){
@@ -1118,7 +1117,7 @@ App.prototype.stockHistory = function () {
                     title: "Suppliers",
                     save_state: true,
                     save_state_area: "content_area",
-                    onload_handler: app.pages.stock_history,
+                    onload_handler: app.pages.reports,
                     onload: function () {
                         app.ui.table({
                             id_to_append: "paginate_body",
@@ -1165,7 +1164,7 @@ App.prototype.stockHistory = function () {
 
 
 App.prototype.reportHistory = function(options){
-    var data = app.getFormData(app.context.stock_history);
+    var data = app.getFormData(app.context.reports);
     var id = $("#search_products").attr("current-item");
     id = $("#search_products").val().trim() === ""  ? "all" : id;
     if (!data) return;
@@ -1276,10 +1275,14 @@ App.prototype.createProduct = function () {
     else {
         $("#product_parent").removeAttr("current-item");
     }
-  
+    var currentQty = parseFloat($("#current_product_quantity").html());
+    var changeQty = parseFloat(data.product_quantity.value);
+    var qtyType = $("#product_quantity_type").val();
+    var newQty = qtyType === "increase" ? currentQty + changeQty : currentQty - changeQty;
+    newQty = newQty < 0 ? 0 : newQty;
     var requestData = {
         product_name: data.product_name.value,
-        product_quantity: data.product_quantity.value,
+        product_quantity: newQty,
         product_category: data.product_category.value,
         product_sub_category: data.product_sub_category.value,
         product_bp_unit_cost: data.product_bp_unit_cost.value,
@@ -1376,12 +1379,16 @@ App.prototype.updateProduct = function () {
     else {
         $("#product_parent").removeAttr("current-item");
     }
-    
+    var currentQty = parseFloat($("#current_product_quantity").html());
+    var changeQty = parseFloat(data.product_quantity.value);
+    var qtyType = $("#product_quantity_type").val();
+    var newQty = qtyType === "increase" ? currentQty + changeQty : currentQty - changeQty;
+    newQty = newQty < 0 ? 0 : newQty;
     var requestData = {
             id: id,
             old_product_name: $("#product_name").attr("old-product-name"),
             product_name: data.product_name.value,
-            product_quantity: data.product_quantity.value,
+            product_quantity: newQty,
             product_category: data.product_category.value,
             product_sub_category: data.product_sub_category.value,
             product_bp_unit_cost: data.product_bp_unit_cost.value,
@@ -1484,7 +1491,15 @@ App.prototype.stockExpiry = function (handler) {
                         values : [resp.PRODUCT_NAME, resp.PRODUCT_EXPIRY_DATE, resp.CREATED],
                         include_nums : true,
                         style : "",
-                        mobile_collapse : true
+                        mobile_collapse : true,
+                        transform : {
+                            1 : function(value){
+                                return new Date(parseInt(value)).toLocaleString();
+                            },
+                            2 : function (value) {
+                                return new Date(parseInt(value)).toLocaleString();
+                            }
+                        }
                     });
                 }
             });
@@ -1510,7 +1525,12 @@ App.prototype.stockLow = function (handler) {
                         values : [resp.PRODUCT_NAME, resp.PRODUCT_QTY, resp.PRODUCT_REMIND_LIMIT, resp.CREATED],
                         include_nums : true,
                         style : "",
-                        mobile_collapse : true
+                        mobile_collapse : true,
+                        transform: {
+                            3: function (value) {
+                                return new Date(parseInt(value)).toLocaleString();
+                            }
+                        }
                     });
                 }
             });
@@ -1627,6 +1647,42 @@ App.prototype.payBill = function () {
     });
 };
 
+App.prototype.billingHistory = function(){
+    app.xhr({}, "open_data_service", "billing_history", {
+        load: true,
+        success: function (resp) {
+            var h = resp.response.data;
+            if(!h) return;
+            app.paginate({
+                title: "Billing History",
+                save_state: true,
+                save_state_area: "content_area",
+                onload_handler: app.pages.billing,
+                onload: function () {
+                    app.ui.table({
+                        id_to_append: "paginate_body",
+                        headers: ["Payment Channel", "Type", "Date Entered"],
+                        values: [h.SENDER_SERVICE, h.TRAN_TYPE, h.TIMESTAMP],
+                        include_nums: true,
+                        style: "",
+                        mobile_collapse: true,
+                        transform : {
+                            1 : function(value){
+                                var style = value === "1" ? "color : green" : "color : red";
+                                var span = value === "1" ? "<span style='"+style+"' >Bill Payment</span>" : "<span '"+style+"'>Invoice</span>";
+                                return span;
+                            },
+                            2 : function(value){
+                                return new Date(parseInt(value)).toLocaleString();
+                            }
+                        }
+                    }); 
+                }
+            });
+        }
+    }); 
+};
+
 App.prototype.verifyPayBill = function () {
     var data = app.getFormData(app.context.pay_bill);
     if (!data)
@@ -1647,4 +1703,4 @@ App.prototype.verifyPayBill = function () {
         }
     });
 
-}
+};

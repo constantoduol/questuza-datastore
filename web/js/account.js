@@ -36,6 +36,15 @@ App.prototype.login = function () {
     return false;
 };
 
+App.prototype.fetchBusinessSettings = function(busId){
+  app.xhr({},"open_data_service","fetch_settings",{
+      load : false,
+      success : function(resp){
+          var r = resp.response.data;
+          localStorage.setItem("settings", JSON.stringify(r));  
+      }
+  });
+};
 
 App.prototype.logout = function () {
     var requestData = {
@@ -147,17 +156,18 @@ App.prototype.navigate = function (privileges, buss) {
         //no privileges found
         //thats strange
     }
-
+    
 
 };
 
 
 App.prototype.navigateBusiness = function (buss, url) {
     if (buss.business_ids && buss.business_ids.length === 1) {
-        window.location = url;
         localStorage.setItem("business_type", buss.business_types[0]);
         localStorage.setItem("business_name", buss.business_names[0]);
         localStorage.setItem("business_owner", buss.business_owners[0]);
+        localStorage.setItem("business_id", buss.business_ids[0]);
+        window.location = url;
     }
     else if (buss.business_ids && buss.business_ids.length > 1) {
         var options = "";
@@ -175,6 +185,7 @@ App.prototype.navigateBusiness = function (buss, url) {
                 localStorage.setItem("business_type", businessType);
                 localStorage.setItem("business_name", businessName);
                 localStorage.setItem("business_owner", businessOwner);
+                localStorage.setItem("business_id", businessId);
                 window.location = url;
             },
             cancel: function () {
