@@ -2,26 +2,21 @@ App.prototype.loadCategories = function(id,type,filter){
     //load categories from the server
     var request = {
         category_type : type,
-        filter : filter, //product filter
-        username : localStorage.getItem("current_user")
+        filter : filter //product filter
     };
-    app.xhr(request,""+app.dominant_privilege+","+app.dominant_privilege+"","product_categories,fetch_categories",{
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "product_categories",
         load : false,
+        cache : true,
         success : function(data){
             //if the user is uncategorized or all show all the categories
-            var key = app.dominant_privilege+"_fetch_categories";
-            var key1 = app.dominant_privilege+"_product_categories";
-            var userCats = data.response[key].data.CATEGORY;
-            var allCats = data.response[key1].data;
+            var allCats = data.response.data;
             //display the categories
             var cats;
             if(type === "category"){
-                if(userCats && userCats.length > 0 && userCats.indexOf("all") === -1){
-                   cats = userCats; 
-                }
-                else {
-                   cats = allCats["PRODUCT_CATEGORY"];
-                }
+                cats = allCats["PRODUCT_CATEGORY"];
             }
             else {
                 cats = allCats["PRODUCT_SUB_CATEGORY"];
@@ -94,8 +89,12 @@ App.prototype.loadProducts = function(category,sub_category){
         category : category,
         sub_category : sub_category
     };
-    app.xhr(request,app.dominant_privilege,"load_products",{
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "load_products",
         load : false,
+        cache : true,
         success : function(resp){
             var p = resp.response.data.categorized_products;
             var a = resp.response.data.all_products;
@@ -209,7 +208,10 @@ App.prototype.commitSale = function () {
                 business_type: app.appData.formData.login.current_user.business_type
             };
             //do some stuff like saving to the server
-            app.xhr(request, app.dominant_privilege, "transact", {
+            app.xhr({
+                data : request,
+                service : app.dominant_privilege,
+                message : "transact",
                 load: true,
                 success: function (data) {
                     var resp = data.response.data;
@@ -332,7 +334,10 @@ App.prototype.todaySales = function (username,category) {
         success : function(resp){
            var cashReceived = resp.response.data;
             //do nothing until cash received is ready 
-            app.xhr(request, app.dominant_privilege, "stock_history", {
+            app.xhr({
+                data : request,
+                service : app.dominant_privilege,
+                message : "stock_history",
                 load: true,
                 success: function (data) {
                     var resp = data.response.data;
@@ -416,7 +421,10 @@ App.prototype.todaySales = function (username,category) {
                                                 return; //this was added because clients dont want somebody to reverse this
                                             var isReceived = current === "Yes" ? "No" : "Yes";
                                             this.innerHTML = isReceived;
-                                            app.xhr({trans_id: value, cash_received: isReceived}, app.dominant_privilege, "note_cash_received", {
+                                            app.xhr({
+                                                data : {trans_id: value, cash_received: isReceived},
+                                                service : app.dominant_privilege,
+                                                message : "note_cash_received",
                                                 load: false
                                             });
                                         });
@@ -602,5 +610,5 @@ App.prototype.clearSale = function(){
     $("#clear_sale_link").css("visibility", "hidden");
     $("#total_qty").html("0");
     $("#total_amount").html("0.00");
-    app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category");  
+    app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category","");  
 };

@@ -59,6 +59,15 @@ App.prototype.settings = {
         selected : "touch",
         label : "User Interface"
     },
+    billing_currency: {
+        type: "select",
+        id: "billing_currency",
+        option_names: ["Kenyan Shilling", "US Dollar"],
+        option_values: ["KES", "USD"],
+        required: true,
+        selected: "ksh",
+        label: "Billing Currency"
+    },
     no_of_receipts: {
         type : "number",
         id : "no_of_receipts",

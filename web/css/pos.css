@@ -192,7 +192,7 @@ label {
     margin-bottom : 10px;
 }
 
-input[type="text"],input[type="number"],input[type="password"],select {
+input[type="text"],input[type="number"],input[type="password"],input[type="email"],select {
     height: 40px;
     font-size: 18px;
 }

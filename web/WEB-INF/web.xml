@@ -29,7 +29,7 @@
         </init-param>
         <init-param>
             <param-name>sendgrid-password</param-name>
-            <param-value>Pasnipop@77</param-value>
+            <param-value>thelonelymt.1</param-value>
         </init-param>
         <init-param>
             <param-name>password-expires</param-name>

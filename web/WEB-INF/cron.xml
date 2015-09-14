@@ -3,6 +3,6 @@
   <cron>
     <url>/server?json=%7B%22request_header%22%3A%7B%22request_svc%22%3A%22open_data_service%22%2C%22request_msg%22%3A%22invoice_accounts%22%2C%22session_id%22%3A%22%22%7D%2C%22request_object%22%3A%7B%22key%22%3A%22fwgifgy33hfdegegef%22%7D%7D</url>
     <description>Invoice user accounts</description>
-    <schedule>29 of month 23:59</schedule>
+    <schedule>1 of month 00:00</schedule>
   </cron>
 </cronentries>

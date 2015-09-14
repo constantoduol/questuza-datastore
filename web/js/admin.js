@@ -6,44 +6,6 @@ App.prototype.brand = function(){
   });  
 };
 
-App.prototype.activateProduct = function(){
-    var html = "<label for='business_name'>Business Name</label>" +
-        "<input type='text' id='business_name' class='form-control'>" +
-        "<label for='activation_key'>Activation Key</label>" +
-        "<input type='text' id='activation_key' class='form-control'>";
-    app.ui.modal(html,"Activate Product",{
-        okText : "Activate",
-        ok : function(){
-            var name = $("#business_name").val().trim();
-            var key = $("#activation_key").val().trim();
-            if(name === "" || key === "") {
-                alert("Both business name and activation key are required");
-                return;
-            }
-            var request = {
-                business_name : name,
-                activation_key : key
-            };
-            app.xhr(request,"open_data_service","activate_product",{
-                load : true,
-                success : function(data){
-                    var resp = data.response.data;
-                    var date = new Date(parseInt(resp.expiry)).toLocaleString();
-                    var show = "Congratulations, Your product is activated!<br> \n\
-                        Restart your computer to finish activation.<br>Expires: "+date+" \n\
-                        <br>Version: "+resp.version_name+"\n\
-                        <br>Version No : "+resp.version_no+"";
-                    $("#modal_content_area").html(show);
-                    $("#modal_area_button_ok").html("Done");
-                    $("#modal_area_button_ok").unbind("click");
-                    $("#modal_area_button_ok").click(app.logout);
-                }
-
-            });
-
-        }
-    });
-};
 
 App.prototype.saveSettings = function () {
     var data = app.getFormData(app.context.settings);
@@ -52,7 +14,10 @@ App.prototype.saveSettings = function () {
     $.each(app.settings, function (key) {
         request[key] = data[key].value;
     });
-    app.xhr(request, "open_data_service", "save_settings", {
+    app.xhr({
+        data : request,
+        service : "open_data_service",
+        message : "save_settings",
         load: false,
         success: function (resp) {
             var r = resp.response.data;
@@ -82,8 +47,12 @@ App.prototype.loadSettings = function () {
             $.each(app.settings, function (setting) {
                 app.renderDom(app.settings[setting], settingsArea);
             });
-            app.xhr({}, "open_data_service", "fetch_settings", {
+            app.xhr({
+                data : {},
+                service : "open_data_service",
+                message : "fetch_settings",
                 load: false,
+                cache : true,
                 success: function (resp) {
                     var r = resp.response.data;
                     if(!r.CONF_KEY) return;
@@ -121,7 +90,10 @@ App.prototype.updateUser = function () {
         group: role,
         privs: priv
     };
-    app.xhr(requestData, "user_service", "edit_user", {
+    app.xhr({
+        data : requestData,
+        service : "user_service",
+        message : "edit_user",
         load: true,
         success: function (data) {
             //say the user was created
@@ -159,7 +131,10 @@ App.prototype.generalUserRequest = function (msg) {
     var requestData = {
         name: data.email_address.value
     };
-    app.xhr(requestData, "user_service", msg, {
+    app.xhr( {
+        data : requestData,
+        service : "user_service",
+        message : msg,
         load: true,
         success: function (data) {
             if (data.response.data === "success") {
@@ -200,7 +175,10 @@ App.prototype.createUser = function () {
         privs: priv,
         real_name: data.real_name.value
     };
-    app.xhr(requestData, "open_data_service", "create_account", {
+    app.xhr({
+        data : requestData,
+        service : "open_data_service",
+        message : "create_account",
         load: true,
         success: function (data) {
             if (data.response.data === "success") {
@@ -238,7 +216,10 @@ App.prototype.forgotPassword = function () {
                 username: email,
                 business_name: business
             };
-            app.xhr(request, "open_data_service", "forgot_password", {
+            app.xhr({
+                data : request,
+                service : "open_data_service",
+                message : "forgot_password",
                 load: true,
                 success: function (data) {
                     //say the user was created
@@ -276,9 +257,12 @@ App.prototype.resetPassword = function () {
     if (!data)
         return;
     var requestData = {
-        name: data.email_address.value,
+        name: data.email_address.value
     };
-    app.xhr(requestData, "user_service", "reset_pass", {
+    app.xhr({
+        data : requestData,
+        service : "user_service",
+        message : "reset_pass",
         load: true,
         success: function (data) {
             if (data.response.data === "success") {
@@ -295,7 +279,10 @@ App.prototype.resetPassword = function () {
 };
 
 App.prototype.allUsers = function () {
-    app.xhr({}, "user_service,pos_admin_service", "all_users,all_users", {
+    app.xhr({
+        data : {},
+        service : "user_service,pos_admin_service",
+        message : "all_users,all_users",
         load: true,
         success: function (data) {
             var title = "All Users";
@@ -354,7 +341,10 @@ App.prototype.addResource = function () {
     };
     var conf = confirm("Add "+data.resource_type.value+" ?");
     if(!conf) return;
-    app.xhr(request, app.dominant_privilege, "add_resource", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "add_resource",
         load: true,
         success: function (resp) {
             if (resp.response.data === "success") {
@@ -380,7 +370,10 @@ App.prototype.profitAndLoss = function () {
         end_date: data.end_date.value,
         business_type : localStorage.getItem("business_type")
     };
-    app.xhr(request, app.dominant_privilege, "profit_and_loss", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "profit_and_loss",
         load: true,
         success: function (resp) {
             var pandl = resp.response.data;
@@ -541,7 +534,10 @@ App.prototype.supplierAndProduct = function(actionType,prodId,supId){
         supplier_id : supId,
         product_id : prodId
     };
-    app.xhr(request,app.dominant_privilege,"supplier_and_product",{
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "supplier_and_product",
         load : true,
         success : function(data){
             var resp = data.response.data;
@@ -599,7 +595,10 @@ App.prototype.supplierAccount = function(prodId,supId,name){
                 product_id : prodId,
                 business_type : localStorage.getItem("business_type")
             };
-            app.xhr(request,app.dominant_privilege,"supplier_account_transact",{
+            app.xhr({
+                data : request,
+                service : app.dominant_privilege,
+                message : "supplier_account_transact",
                 load : true,
                 success : function (data) {
                     var resp = data.response.data;
@@ -632,7 +631,10 @@ App.prototype.supplierAccount = function(prodId,supId,name){
 
 
 App.prototype.allSuppliers = function(){
-    app.xhr({},app.dominant_privilege,"all_suppliers",{
+    app.xhr({
+        data : {},
+        service : app.dominant_privilege,
+        message : "all_suppliers",
         load : true,
         success : function(data){
             var r = data.response.data;
@@ -689,7 +691,10 @@ App.prototype.gridEdit = function(ids,columns,headers,values){
                    column : columns[col],
                    business_type : localStorage.getItem("business_type")
                };
-               app.xhr(request,app.dominant_privilege,"save_grid_edit",{
+               app.xhr({
+                   data : request,
+                   service : app.dominant_privilege,
+                   message : "save_grid_edit",
                    load : false,
                    success : function(resp){
                        if(resp.response.data === "success"){
@@ -709,8 +714,12 @@ App.prototype.allProducts = function (handler) {
     var request = {
         category : $("#product_categories").val()
     };
-    app.xhr(request, app.dominant_privilege, "all_products", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "all_products",
         load: true,
+        cache : true,
         success: function (data) {
             var resp = data.response.data;
             app.context.product.fields.search_products.autocomplete.data = $.extend(true, {}, resp); //we will need this for paginateSelect
@@ -818,7 +827,10 @@ App.prototype.goodsStockHistory = function () {
         report_type : data.report_type.value,
         product_categories : data.product_categories.value
     };
-    app.xhr(request, app.dominant_privilege, "stock_history", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "stock_history",
         load: true,
         success: function (data) {
             //product name
@@ -930,7 +942,10 @@ App.prototype.servicesStockHistory = function () {
         report_type : data.report_type.value,
         product_categories : data.product_categories.value
     };
-    app.xhr(request, app.dominant_privilege, "stock_history", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "stock_history",
         load: true,
         success: function (data) {
             //product name
@@ -1180,7 +1195,10 @@ App.prototype.reportHistory = function(options){
         report_type : data.report_type.value,
         supplier_id : $("#stock_select_suppliers").val()
     };
-    app.xhr(request, app.dominant_privilege,"stock_history", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "stock_history",
         load: true,
         success: function (data) {
            options.success(data);
@@ -1217,7 +1235,10 @@ App.prototype.supplierAction = function(actionType){
         supplier_id : id,
         old_supplier_name : oldSupplierName
     };
-    app.xhr(request, app.dominant_privilege, "supplier_action", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "supplier_action",
         load: true,
         success: function (data) {
             if (data.response.data === "success") {
@@ -1297,7 +1318,10 @@ App.prototype.createProduct = function () {
         business_type: app.appData.formData.login.current_user.business_type
     };
     
-    app.xhr(requestData, app.dominant_privilege, "create_product", {
+    app.xhr({
+        data : requestData,
+        service : app.dominant_privilege,
+        message : "create_product",
         load: true,
         success: function (data) {
             if (data.response.data === "SUCCESS") {
@@ -1323,7 +1347,10 @@ App.prototype.deleteProduct = function () {
     var requestData = {
         id: id
     };
-    app.xhr(requestData, app.dominant_privilege, "delete_product", {
+    app.xhr({
+        data : requestData,
+        service : app.dominant_privilege,
+        message : "delete_product",
         load: true,
         success: function (data) {
             console.log(data);
@@ -1403,7 +1430,10 @@ App.prototype.updateProduct = function () {
             business_type: app.appData.formData.login.current_user.business_type
     };
 
-    app.xhr(requestData, app.dominant_privilege, "update_product", {
+    app.xhr({
+        data : requestData,
+        service : app.dominant_privilege,
+        message : "update_product",
         load: true,
         success: function (data) {
             if (data.response.data === "SUCCESS") {
@@ -1455,7 +1485,10 @@ App.prototype.saveBusiness = function (actionType) {
    
     var svc = actionType === "delete" ? "open_data_service,pos_admin_service" : "open_data_service";
     var msg = actionType === "delete" ? "save_business,delete_business" : "save_business";
-    app.xhr(request, svc, msg, {
+    app.xhr({
+        data : request,
+        service : svc,
+        message : msg,
         load: true,
         success: function (data) {
             var resp = actionType === "delete" ? data.response.open_data_service_save_business.data : data.response.data;
@@ -1474,7 +1507,10 @@ App.prototype.saveBusiness = function (actionType) {
 
 
 App.prototype.stockExpiry = function (handler) {
-    app.xhr({}, app.dominant_privilege, "stock_expiry", {
+    app.xhr({
+        data : {},
+        service : app.dominant_privilege,
+        message : "stock_expiry",
         load: true,
         success: function (data) {
             var resp = data.response.data;
@@ -1508,7 +1544,10 @@ App.prototype.stockExpiry = function (handler) {
 };
 
 App.prototype.stockLow = function (handler) {
-    app.xhr({}, app.dominant_privilege, "stock_low", {
+    app.xhr({
+        data : {},
+        service : app.dominant_privilege,
+        message : "stock_low",
         load: true,
         success: function (data) {
             var resp = data.response.data;
@@ -1554,7 +1593,10 @@ App.prototype.undoSale = function (prodId, prodQty) {
                 tran_flag: "reversal_of_sale"
             };
             //do some stuff like saving to the server
-            app.xhr(request, app.dominant_privilege, "transact", {
+            app.xhr({
+                data : request,
+                service : app.dominant_privilege,
+                message : "transact",
                 load: true,
                 success: function (data) {
                     var resp = data.response.data;
@@ -1593,7 +1635,10 @@ App.prototype.addProductCategory = function(){
        category : cat,
        username : username
    };
-   app.xhr(request,app.dominant_privilege,"add_category",{
+   app.xhr({
+       data : request,
+       service : app.dominant_privilege,
+       message : "add_category",
        load : true,
        success : function(resp){
           var r = resp.response.data;
@@ -1612,7 +1657,10 @@ App.prototype.fetchProductCategory = function(){
     var request = {
         username: username
     };
-    app.xhr(request, app.dominant_privilege, "fetch_categories", {
+    app.xhr({
+        data : request,
+        service : app.dominant_privilege,
+        message : "fetch_categories",
         load: false,
         success: function (resp) {
             var r = resp.response.data;
@@ -1635,7 +1683,10 @@ App.prototype.payBill = function () {
                 load_area: "paginate_body",
                 onload: function () {
                     //load the amount due
-                    app.xhr({}, "open_data_service", "fetch_account_balance", {
+                    app.xhr({
+                        data : {},
+                        service : "open_data_service",
+                        message : "fetch_account_balance",
                         load: true,
                         success: function (resp) {
                             $("#bill_amount_due").html(app.formatMoney(resp.response.data.balance));
@@ -1648,7 +1699,10 @@ App.prototype.payBill = function () {
 };
 
 App.prototype.billingHistory = function(){
-    app.xhr({}, "open_data_service", "billing_history", {
+    app.xhr({
+        data : {},
+        service : "open_data_service",
+        message : "billing_history",
         load: true,
         success: function (resp) {
             var h = resp.response.data;
@@ -1691,7 +1745,10 @@ App.prototype.verifyPayBill = function () {
         phone_no: data.phone_no.value,
         trans_id: data.trans_id.value
     };
-    app.xhr(requestData, "open_data_service", "verify_bill_mpesa", {
+    app.xhr({
+        data : requestData,
+        service : "open_data_service",
+        message : "verify_bill_mpesa",
         load: true,
         success: function (resp) {
             if (resp.response.data === "fail") {

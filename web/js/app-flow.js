@@ -7,7 +7,7 @@ AppData.prototype.formData = {
         },
         error_space: "error_space_login",
         load_area: "error_space_login",
-        error_message: "Well,it seems the server is unavailable",
+        error_message: "The server is unavailable or you have no network connection",
         businesss_required: "Both email and business name are required!",
         password_reset_success: "An email has been sent to your address, use it to reset your password",
         current_user: {
@@ -39,7 +39,7 @@ AppData.prototype.formData = {
         },
         error_space: "error_space_create",
         load_area: "error_space_create",
-        error_message: "Well,it seems the server is unavailable",
+        error_message: "The server is unavailable or you have no network connection",
         passwords_not_match: "The passwords entered do not match",
         password_not_valid: "Password should be more than 4 characters, have at least one number and be less than 50 characters",
         create_account_success: "User account was created successfully, check your email to activate your account",
@@ -54,7 +54,7 @@ AppData.prototype.formData = {
         },
         error_space: "error_space_login",
         load_area: "error_space_login",
-        error_message: "Well,it seems the server is unavailable",
+        error_message: "The server is unavailable or you have no network connection",
         passwords_not_match: "New password and confirm password do not match",
         password_not_valid: "Password should be more than 4 characters, have at least one number and be less than 50 characters",
         messages: {
@@ -91,7 +91,7 @@ AppData.prototype.formData = {
         },
         error_space: "error_space_sale",
         load_area: "error_space_sale",
-        error_message: "Well,it seems the server is unavailable",
+        error_message: "The server is unavailable or you have no network connection",
         commit_sale: "Do you wish to commit transaction?",
         invalid_qty: "An invalid quantity has been specified for this item",
         insufficient_stock: "There is not sufficient stock to proceed with the sale",
@@ -124,7 +124,10 @@ AppData.prototype.formData = {
                             var request = {
                                 name: name
                             };
-                            app.xhr(request, "user_service", "view_user", {
+                            app.xhr({
+                                data : request,
+                                service : "user_service",
+                                message : "view_user",
                                 load: false,
                                 success: function (data) {
                                     var privs = data.response.data.priv_data;
@@ -531,7 +534,7 @@ AppData.prototype.formData = {
         },
         error_space: "error_space_admin",
         load_area: "error_space_admin",
-        error_message: "Well,it seems the server is unavailable",
+        error_message: "The server is unavailable or you have no network connection",
         create_user: "User created successfully, user should check email for login credentials",
         email_invalid: "The email address entered is invalid",
         update_user: "The user was updated successfully",

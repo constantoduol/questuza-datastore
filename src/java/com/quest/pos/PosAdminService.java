@@ -355,6 +355,8 @@ public class PosAdminService implements Serviceable {
         Filter filter1 = new FilterPredicate("BUSINESS_ID", FilterOperator.EQUAL, busId);
         Filter filter2 = new FilterPredicate("PRODUCT_NAME", FilterOperator.EQUAL, productName);
         boolean exists = Datastore.getSingleEntity("PRODUCT_DATA", filter1, filter2) != null;
+        Integer count = Datastore.getMultipleEntitiesAsList("PRODUCT_DATA",filter1).size();
+        count++;
         if (exists) {
             worker.setResponseData("FAIL");
             worker.setReason("Product " + productName + " already exists");
@@ -365,10 +367,10 @@ public class PosAdminService implements Serviceable {
 
                 UserAction action = new UserAction(serv, worker, "CREATE PRODUCT " + productName);
                 String prodId = new UniqueRandom(10).nextMixedRandom();
-                String[] propNames1 = new String[]{"ID", "BUSINESS_ID", "PRODUCT_NAME", "PRODUCT_QTY", "PRODUCT_CATEGORY", "PRODUCT_SUB_CATEGORY", "PRODUCT_PARENT",
+                String[] propNames1 = new String[]{"ID", "BUSINESS_ID", "PRODUCT_NAME","PRODUCT_CODE", "PRODUCT_QTY", "PRODUCT_CATEGORY", "PRODUCT_SUB_CATEGORY", "PRODUCT_PARENT",
                     "PRODUCT_UNIT_SIZE", "BP_UNIT_COST", "SP_UNIT_COST", "PRODUCT_REMIND_LIMIT", "PRODUCT_EXPIRY_DATE", "PRODUCT_NARRATION", "TAX",
                     "COMMISSION", "ACTION_ID", "CREATED"};
-                Object[] values1 = new Object[]{prodId, busId, productName, productQty, productCat, productSubCat, pProduct, unitSize,
+                Object[] values1 = new Object[]{prodId, busId, productName,count.toString(), productQty, productCat, productSubCat, pProduct, unitSize,
                     productBp, productSp, productRlimit, expDate, productNarr, tax, comm, action.getActionID(), timestamp()};
 
                 Datastore.insert("PRODUCT_DATA", propNames1, values1);
@@ -407,7 +409,8 @@ public class PosAdminService implements Serviceable {
         serv.messageToClient(worker);
     }
 
-    @Endpoint(name = "all_products", shareMethodWith = {"pos_sale_service", "pos_middle_service"})
+    @Endpoint(name = "all_products", shareMethodWith = {"pos_sale_service", "pos_middle_service"},
+            cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product","pos_admin_service_delete_product"})
     public void allProducts(Server serv, ClientWorker worker) {
         JSONObject requestData = worker.getRequestData();
         String cat = requestData.optString("category");
@@ -957,7 +960,8 @@ public class PosAdminService implements Serviceable {
         serv.messageToClient(worker);
     }
     
-    @Endpoint(name = "product_categories", shareMethodWith = {"pos_sale_service", "pos_middle_service"})
+    @Endpoint(name = "product_categories", shareMethodWith = {"pos_sale_service", "pos_middle_service"},
+            cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product","pos_admin_service_delete_product"})
     public void loadCategories(Server serv, ClientWorker worker) {
         JSONObject requestData = worker.getRequestData();
         String catType = requestData.optString("category_type");
@@ -985,7 +989,8 @@ public class PosAdminService implements Serviceable {
         serv.messageToClient(worker);
     }
 
-    @Endpoint(name = "load_products", shareMethodWith = {"pos_sale_service", "pos_middle_service"})
+    @Endpoint(name = "load_products", shareMethodWith = {"pos_sale_service", "pos_middle_service"},
+            cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product","pos_admin_service_delete_product"})
     public void loadProducts(Server serv, ClientWorker worker) throws JSONException {
         JSONObject requestData = worker.getRequestData();
         String cat = requestData.optString("category");

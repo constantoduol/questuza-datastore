@@ -10,7 +10,6 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.quest.access.common.UniqueRandom;
 import com.quest.access.common.datastore.Datastore;
-import com.quest.access.common.io;
 import com.quest.access.control.Server;
 import com.quest.access.useraccess.Serviceable;
 import com.quest.access.useraccess.services.Message;
@@ -133,7 +132,6 @@ public class PosSaleService implements Serviceable {
                
             } catch (Exception ex) {
                 Logger.getLogger(PosSaleService.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
             }
         }
        

@@ -126,12 +126,12 @@ AppData.prototype.onload = {
         $("#product_display_area").html("");
         $("#category_area").html("");
         app.fetchBusinessSettings();
-        app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category");
+        app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category","");
         
         $("#home_link").click(function () {
             $("#category_area").html("");
             $("#product_display_area").html("");
-            app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category");
+            app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category","");
         });
 
         $("#clear_sale_link").click(function () {
@@ -160,7 +160,10 @@ AppData.prototype.onload = {
                     }
                 });
 
-                app.xhr({category_type: "category"}, "" + app.dominant_privilege + "," + app.dominant_privilege + "", "all_users,product_categories", {
+                app.xhr({
+                    data : {category_type: "category"},
+                    service : "" + app.dominant_privilege + "," + app.dominant_privilege + "",
+                    message : "all_users,product_categories",
                     load: false,
                     success: function (data) {
                         var key = app.dominant_privilege + "_all_users";
@@ -219,7 +222,10 @@ AppData.prototype.onload = {
         }
 
         //check billing and settings
-        app.xhr({}, "open_data_service,open_data_service", "fetch_account_balance,fetch_settings", {
+        app.xhr({
+            data : {},
+            service : "open_data_service,open_data_service",
+            message : "fetch_account_balance,fetch_settings",
             load: false,
             success: function (resp) {
                 var amount = parseFloat(resp.response.open_data_service_fetch_account_balance.data.balance);
@@ -269,16 +275,16 @@ AppData.prototype.onload = {
         $("#add_category_btn").click(app.addProductCategory);
         $("#search_link").click(app.allUsers);
         app.setUpAuto(app.context.user.fields.search_users);
-        app.xhr({category_type: "category"}, app.dominant_privilege, "product_categories", {
-            load: false,
-            success: function (resp) {
-                var r = resp.response.data.PRODUCT_CATEGORY;
-                $.each(r, function (index) {
-                    var cat = r[index];
-                    $("#product_categories").append($("<option value=" + cat + ">" + cat + "</option>"));
-                });
-            }
-        });
+//        app.xhr({category_type: "category"}, app.dominant_privilege, "product_categories", {
+//            load: false,
+//            success: function (resp) {
+//                var r = resp.response.data.PRODUCT_CATEGORY;
+//                $.each(r, function (index) {
+//                    var cat = r[index];
+//                    $("#product_categories").append($("<option value=" + cat + ">" + cat + "</option>"));
+//                });
+//            }
+//        });
 
     },
     "/views/product.html": function () {
@@ -295,8 +301,12 @@ AppData.prototype.onload = {
         app.setUpAuto(app.context.product.fields.product_sub_category);
         app.setUpAuto(app.context.product.fields.product_parent);
         app.setUpDate("product_expiry_date", true); //has limit
-        app.xhr({category_type: "category"}, app.dominant_privilege, "product_categories", {
+        app.xhr({
+            data : {category_type: "category"},
+            service : app.dominant_privilege,
+            message : "product_categories",
             load: false,
+            cache : true,
             success: function (resp) {
                 var r = resp.response.data.PRODUCT_CATEGORY;
                 if(!r) return;
@@ -326,8 +336,12 @@ AppData.prototype.onload = {
             $("#product_quantity").remove();
             $("#product_quantity_label").remove();
         }
-        app.xhr({category_type: "category"}, app.dominant_privilege, "product_categories", {
+        app.xhr({
+            data : {category_type: "category"},
+            service : app.dominant_privilege,
+            message : "product_categories",
             load: false,
+            cache : true,
             success: function (resp) {
                 var r = resp.response.data.PRODUCT_CATEGORY;
                 if(!r) return;
@@ -388,7 +402,10 @@ AppData.prototype.onload = {
             $("#business_category").append($("<option value=" + category + ">" + category + "</option>"));
         });
         //load all values for business
-        app.xhr({}, "open_data_service", "business_data", {
+        app.xhr({
+            data : {},
+            service : "open_data_service",
+            message : "business_data",
             load: true,
             success: function (data) {
                 var resp = data.response.data;
@@ -455,7 +472,10 @@ AppData.prototype.onload = {
             $("#stop_time").append($("<option value=" + time + ">" + time + "</option>"));
         });
         //load all users
-        app.xhr({category_type: "category"}, "" + app.dominant_privilege + "," + app.dominant_privilege + "," + app.dominant_privilege + "", "all_users,all_suppliers,product_categories", {
+        app.xhr({
+            data : {category_type: "category"},
+            service : "" + app.dominant_privilege + "," + app.dominant_privilege + "," + app.dominant_privilege + "",
+            message : "all_users,all_suppliers,product_categories",
             load: false,
             success: function (data) {
                 var key = app.dominant_privilege + "_all_users";

@@ -8,7 +8,10 @@ App.prototype.login = function () {
         username: data.username.value,
         password: data.password.value
     };
-    app.xhr(requestData, "open_data_service,open_data_service", "login,business_info", {
+    app.xhr({
+        data : requestData,
+        service :  "open_data_service,open_data_service",
+        message : "login,business_info",
         load: true,
         success: function (resp) {
             var binfo = resp.response.open_data_service_business_info.data;
@@ -37,8 +40,12 @@ App.prototype.login = function () {
 };
 
 App.prototype.fetchBusinessSettings = function(busId){
-  app.xhr({},"open_data_service","fetch_settings",{
+  app.xhr({
+      data : {},
+      service : "open_data_service",
+      message : "fetch_settings",
       load : false,
+      cache : true,
       success : function(resp){
           var r = resp.response.data;
           localStorage.setItem("settings", JSON.stringify(r));  
@@ -50,7 +57,10 @@ App.prototype.logout = function () {
     var requestData = {
         user_name: app.appData.formData.login.current_user
     };
-    app.xhr(requestData, "open_data_service", "logout", {
+    app.xhr({
+        data : requestData,
+        service : "open_data_service",
+        message : "logout",
         load: true,
         success: function (data) {
             //login again
@@ -95,7 +105,10 @@ App.prototype.changePassword = function () {
         new_password: data.new_password.value,
         confirm_password: data.confirm_password.value
     };
-    app.xhr(requestData, "open_data_service", "changepass", {
+    app.xhr({
+        data : requestData,
+        service : "open_data_service",
+        message : "changepass",
         load: true,
         success: function (data) {
             if (data.response.data === true) {
@@ -228,7 +241,10 @@ App.prototype.createAccount = function () {
         host: "localhost",
         real_name: data.real_name.value
     };
-    app.xhr(requestData, "open_data_service", "create_account", {
+    app.xhr({
+        data : requestData,
+        service : "open_data_service",
+        message : "create_account",
         load: true,
         success: function (resp) {
             if (resp.response.data === "success") {

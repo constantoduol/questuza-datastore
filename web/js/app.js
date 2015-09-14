@@ -20,15 +20,39 @@ App.prototype.isMobile = function(){
 
 
 
-App.prototype.xhr = function (data, svc, msg, func) {
+App.prototype.xhr = function (options) {
     var request = {};
     request.request_header = {};
-    request.request_header.request_svc = svc;
-    request.request_header.request_msg = msg;
+    request.request_header.request_svc = options.service;
+    request.request_header.request_msg = options.message;
     request.request_header.session_id = localStorage.getItem("session_id");
-    data.business_id = localStorage.getItem("business_id");
-    request.request_object = data;
-    if (func.load) {
+    options.data.business_id = localStorage.getItem("business_id");
+    request.request_object = options.data;
+    var key = options.service + "_" +options.message;
+    if(options.cache){
+        //this tells us that we can serve local data if we have it
+        //no need for round trips to the server
+        //first we check if we have matching service, message and filters locally
+        //if not we forward the request to the server
+        //pos_admin_service_all_products : 
+        var cacheString = localStorage.getItem(key);
+        if (cacheString) {
+            //var cache = { cache_filters : [{category : 'food'}] , cache_data : [{PRODUCT_NAME : ['milk','bread']}],timestamp : 14153333}
+            var cache = JSON.parse(cacheString);
+            for(var x = 0; x < cache.cache_filters.length; x++){
+                var equals = app.deepEquals(cache.cache_filters[x], options.data);//we know that this is data for the same request if they are equal
+                if(equals){
+                    //get the cache data
+                    console.log("cached result for : "+key);
+                    options.success(cache.cache_data[x]);//trigger an xhr success
+                    return;
+                }
+            }
+        }
+      //we didnt find a match in the cache so do a full server request  
+       
+    }
+    if (options.load) {
         var loadArea = $("#" + app.context.load_area);
         var loader = $("<img src='img/loader.gif'>");
         loadArea.html(loader);
@@ -38,7 +62,7 @@ App.prototype.xhr = function (data, svc, msg, func) {
         url: app.server,
         data: "json=" + encodeURIComponent(JSON.stringify(request)),
         dataFilter: function (data, type) {
-            if (func.load) {
+            if (options.load) {
                 loadArea.html("");
             }
             console.log(data);
@@ -49,13 +73,42 @@ App.prototype.xhr = function (data, svc, msg, func) {
             return data;
         },
         success: function(data){
-            if(func.success) func.success(data);
+            if(options.success) options.success(data);
+            //if we reached here and options.cache is true it means we 
+            //didnt have data in the local cache and had to do a server request
+            //so now we construct our local cache
+            if(options.cache){
+                //check that it exists first
+                var cacheString = localStorage.getItem(key);
+                if(cacheString){
+                    var cache = JSON.parse(cacheString);
+                    //we have a cache, so just append the current request
+                    cache.cache_filters.push(options.data);
+                    cache.cache_data.push(data);
+                    cache.timestamp = $.now();
+                    localStorage.setItem(key,JSON.stringify(cache));
+                }
+                else {
+                    //whoops we dont have a cache yet, create one
+                    var cache = { cache_filters : [options.data] , cache_data : [data] ,timestamp : $.now()};
+                    localStorage.setItem(key,JSON.stringify(cache));
+                }
+            }
+            //expire any existing mappings
+            
+            $.each(data.response._cache_status_,function(key){
+                var localTimestamp = !localStorage.getItem(key) ? Infinity : JSON.parse(localStorage.getItem(key)).timestamp;
+                var serverTimestamp = parseInt(data.response._cache_status_[key]);
+                if(serverTimestamp > localTimestamp){ //if change on server is more recent than data we have here
+                    localStorage.removeItem(key);
+                }
+            });
         },
         error: function(err){
-            if (func.load) {
+            if (options.load) {
                 loadArea.html("");
             }
-            if(func.error) func.error(err);
+            if(options.error) options.error(err);
         }
     });
 };
@@ -165,7 +218,7 @@ App.prototype.setUpAuto = function (field) {
                     var val = data[field.autocomplete.key][x];
                     if (val)
                         arr.push(val);
-                })
+                });
 
                 return process(arr);
             });
@@ -319,7 +372,10 @@ App.prototype.autocomplete = function (field, func) {
         order_direction: auto.order_direction,
         limit: auto.limit
     };
-    app.xhr(requestData, app.dominant_privilege, "auto_complete", {
+    app.xhr({
+        data : requestData,
+        service : app.dominant_privilege,
+        message : "auto_complete",
         load: false,
         success: function (data) {
             if (data && data.response.data === "FAIL") {
