@@ -80,10 +80,18 @@ AppData.prototype.formData = {
                         key: "PRODUCT_NAME",
                         data: {},
                         selected: [],
+                        cache_source : {message : "all_products",service : "pos_sale_service",filters : {}},//search locally first
                         after: function (data, index) {
-                            app.sale(data, index);
-                            app.runLater(200, function () {
-                                $("#search_products").val("");  //clear the search box
+                            $("#category_area").html("");
+                            $("#product_display_area").html("");
+                            app.sale({
+                                data: data,
+                                index: index,
+                                ids: data.ID
+                            });
+                            app.runLater(100, function () {
+                                $("#search_products").val("");
+                                $("#search_products").focus();
                             });
                         }
                     }}

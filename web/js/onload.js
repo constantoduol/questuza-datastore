@@ -110,6 +110,7 @@ AppData.prototype.onload = {
     "/views/billing.html": function () {
         $("#billing_pay_btn").click(app.payBill);
         $("#billing_history_btn").click(app.billingHistory);
+        $("#billing_tier_btn").click(app.currentBillTier);
     },
     "/views/pay_bill.html": function () {
         $("#verify_trans_btn").click(app.verifyPayBill);
@@ -231,9 +232,10 @@ AppData.prototype.onload = {
                 var amount = parseFloat(resp.response.open_data_service_fetch_account_balance.data.balance);
                 var timestamp = parseInt(resp.response.open_data_service_fetch_account_balance.data.timestamp);
                 var diff = $.now() - timestamp;
-                if (amount > 0 && diff > 604800000) { //one week after invoicing
+                var currency = !app.getSetting("billing_currency") ? "" : app.getSetting("billing_currency");
+                if (amount > 0 && diff > 259200000) { //3 days after invoicing
                     //tell the user about this
-                    var m = app.ui.modal("Your account is in arrears<br>Please pay your bill<br> Amount Due : Kshs " + app.formatMoney(amount) + "", "Billing", {
+                    var m = app.ui.modal("Your account is in arrears<br>Please pay your bill<br> Amount Due : "+currency+" " + app.formatMoney(amount) + "", "Billing", {
                         okText: "Pay Now",
                         cancelText: "Pay Later",
                         ok: function () {

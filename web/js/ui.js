@@ -119,6 +119,13 @@ UI.prototype.table = function (options) {
     if (options.include_nums) {
         options.headers.unshift("No");
     }
+    if(options.attributes){
+        //bind attributes to the table
+        $.each(options.attributes,function(attrName){
+            var attrValue = options.attributes[attrName];
+            table.attr(attrName,attrValue);
+        });
+    }
     for (var x = 0; x < options.headers.length; x++) {
         var th = $("<th>");
         th.html(options.headers[x]);

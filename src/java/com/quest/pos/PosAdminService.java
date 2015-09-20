@@ -410,7 +410,8 @@ public class PosAdminService implements Serviceable {
     }
 
     @Endpoint(name = "all_products", shareMethodWith = {"pos_sale_service", "pos_middle_service"},
-            cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product","pos_admin_service_delete_product"})
+            cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product"
+                    ,"pos_admin_service_delete_product","pos_sale_service_transact","pos_admin_service_transact"})
     public void allProducts(Server serv, ClientWorker worker) {
         JSONObject requestData = worker.getRequestData();
         String cat = requestData.optString("category");
@@ -872,7 +873,7 @@ public class PosAdminService implements Serviceable {
         JSONArray flags = data.optJSONArray("TRAN_FLAG");
         //opening stock, cost of goods, closing stock
         //cost of sales
-
+        if(goods != null){
         for (int x = 0; x < goods.length(); x++) {
             Float amountBP = Float.parseFloat(goods.optString(x));
             Float amountSP = Float.parseFloat(sales.optString(x));
@@ -883,6 +884,7 @@ public class PosAdminService implements Serviceable {
             dummy = flag.equals("sale_to_customer") ? costOfGoodsSold = costOfGoodsSold + amountBP : 0; //goods we bought
             dummy = flag.equals("sale_to_customer") ? costOfSales = costOfSales + amountSP : 0; //goods we sold
         }
+        }
 
         JSONObject prodData = Datastore.entityToJSON(Datastore.getMultipleEntities("PRODUCT_DATA", filter));
         JSONArray qtys = prodData.optJSONArray("PRODUCT_QTY");
@@ -890,10 +892,12 @@ public class PosAdminService implements Serviceable {
         Double closingStock = 0d;
         Double openingStock = 0d;
         if (bType.equals("goods")) {
+            if(qtys != null){
             for (int x = 0; x < qtys.length(); x++) {
                 int qty = qtys.optInt(x);
                 Double priceBP = priceBPs.optDouble(x);
                 closingStock += qty * priceBP;
+            }
             }
             openingStock = closingStock + costOfGoodsSold - costOfGoodsBought;
         } else if (bType.equals("services")) {
@@ -990,7 +994,8 @@ public class PosAdminService implements Serviceable {
     }
 
     @Endpoint(name = "load_products", shareMethodWith = {"pos_sale_service", "pos_middle_service"},
-            cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product","pos_admin_service_delete_product"})
+            cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product",
+                "pos_admin_service_delete_product"}) //"pos_sale_service_transact","pos_admin_service_transact"
     public void loadProducts(Server serv, ClientWorker worker) throws JSONException {
         JSONObject requestData = worker.getRequestData();
         String cat = requestData.optString("category");

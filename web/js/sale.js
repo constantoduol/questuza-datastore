@@ -1,5 +1,7 @@
 App.prototype.loadCategories = function(id,type,filter){
     //load categories from the server
+    console.log(type);
+    console.log(filter);
     var request = {
         category_type : type,
         filter : filter //product filter
@@ -101,6 +103,7 @@ App.prototype.loadProducts = function(category,sub_category){
             $("#category_area").html("");
             $("#product_display_area").html("");
             app.ui.table({
+                id : "products_table",
                 id_to_append: "product_display_area",
                 headers: ["Name", "Price","Quantity Available"],
                 values: [p.PRODUCT_NAME,p.SP_UNIT_COST, p.PRODUCT_QTY],
@@ -108,6 +111,7 @@ App.prototype.loadProducts = function(category,sub_category){
                 style: "font-size:20px",
                 class : "table-striped",
                 mobile_collapse: true,
+                attributes : {category : category,sub_category : sub_category},
                 onRowClick : function(values,event){
                    //put the product in the sale area;
                    var tr = event.currentTarget;
@@ -213,6 +217,14 @@ App.prototype.commitSale = function () {
                 service : app.dominant_privilege,
                 message : "transact",
                 load: true,
+                cache_refresh : {
+                    service : "pos_admin_service", 
+                    message : "load_products",
+                    filters : {
+                        category : $("#products_table").attr("category"),
+                        sub_category : $("#products_table").attr("sub_category")
+                    }
+                },
                 success: function (data) {
                     var resp = data.response.data;
                     if (resp.status === "success") {
@@ -442,6 +454,7 @@ App.prototype.todaySales = function (username,category) {
 
 
 App.prototype.loadSaleSearch = function(){
+    debugger;
     var heightCat = app.getDim()[1] * 0.57;
     var heightSale = app.getDim()[1] * 0.3;
     $("#product_category_card").css("height", heightCat + "px");
@@ -455,39 +468,39 @@ App.prototype.loadSaleSearch = function(){
     $("#search_link").click(function(){
         app.allProducts(app.pages.sale);
     });
-    $("#search_products").bind('keyup', 'return', function () {
-        if($("#search_products").val().trim().length === 0 ){
-            app.commitSale();
-            $("#search_products").focus();
-        }
-    });
-    $("#item_code").bind('keyup', 'return', function () {
-        if ($("#item_code").val().trim().length === 0) {
-            app.commitSale();
-            $("#item_code").focus();
-        }
-        else {
-          app.saleByCode();
-        }
-    });
-    
-    $(document).bind('keyup', 'shift+k', function () {
-         $("#item_code").focus();
-    });
-    
-    $(document).bind('keyup', 'shift+p', function () {
-         $("#search_products").focus();
-    });
-    
-    $(document).bind('keyup', 'shift+c', function () {
-         app.clearSale();
-    });
-    $("#item_code").bind('keyup', 'shift+c', function () {
-         app.clearSale();
-    });
-    $("#search_products").bind('keyup', 'shift+c', function () {
-         app.clearSale();
-    });
+//    $("#search_products").bind('keyup', 'return', function () {
+//        if($("#search_products").val().trim().length === 0 ){
+//            app.commitSale();
+//            $("#search_products").focus();
+//        }
+//    });
+//    $("#item_code").bind('keyup', 'return', function () {
+//        if ($("#item_code").val().trim().length === 0) {
+//            app.commitSale();
+//            $("#item_code").focus();
+//        }
+//        else {
+//          app.saleByCode();
+//        }
+//    });
+//    
+//    $(document).bind('keyup', 'shift+k', function () {
+//         $("#item_code").focus();
+//    });
+//    
+//    $(document).bind('keyup', 'shift+p', function () {
+//         $("#search_products").focus();
+//    });
+//    
+//    $(document).bind('keyup', 'shift+c', function () {
+//         app.clearSale();
+//    });
+//    $("#item_code").bind('keyup', 'shift+c', function () {
+//         app.clearSale();
+//    });
+//    $("#search_products").bind('keyup', 'shift+c', function () {
+//         app.clearSale();
+//    });
     app.setUpAuto(app.context.product.fields.search_products);  
 };
 

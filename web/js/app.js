@@ -23,6 +23,8 @@ App.prototype.isMobile = function(){
 App.prototype.xhr = function (options) {
     var request = {};
     request.request_header = {};
+    var originalService = options.service;
+    var originalMessage = options.message;
     request.request_header.request_svc = options.service;
     request.request_header.request_msg = options.message;
     request.request_header.session_id = localStorage.getItem("session_id");
@@ -57,6 +59,14 @@ App.prototype.xhr = function (options) {
         var loader = $("<img src='img/loader.gif'>");
         loadArea.html(loader);
     }
+    
+    if(options.cache_refresh){
+        //refresh the local cache via a downstream link
+        request.request_header.request_svc = request.request_header.request_svc +","+ options.cache_refresh.service;
+        request.request_header.request_msg = request.request_header.request_msg +","+options.cache_refresh.message;
+        $.extend(request.request_object,options.cache_refresh.filters);//merge what is in cache refresh filters to request_object
+    }
+    
     return $.ajax({
         type: "POST",
         url: app.server,
@@ -73,6 +83,41 @@ App.prototype.xhr = function (options) {
             return data;
         },
         success: function(data){
+            if(options.cache_refresh){
+                //transform the data to suit the original request and update the required cache
+                //structure of data without cache refresh is data.response.data;
+                //structure of data with cache refresh is data.response.service_message.data
+                //cache refresh does not support where the original request contains more than one service and message
+                var cont1 = {response : {data : ""}};
+                var cont2 = {response : {data : ""}};
+                var refreshKey = options.cache_refresh.service+"_"+options.cache_refresh.message;
+                cont1.response.data  = data.response[originalService+"_"+originalMessage].data;
+                cont1.response._cache_status_ = data.response._cache_status_;
+                cont2.response.data = data.response[refreshKey].data;
+                data = cont1;
+                
+                //expire the local cache using cont2
+                options.cache_refresh.filters.business_id = localStorage.getItem("business_id");
+                var cacheString = localStorage.getItem(refreshKey);
+                if (cacheString) {
+                    var cache = JSON.parse(cacheString);
+                    for (var x = 0; x < cache.cache_filters.length; x++) {
+                        var equals = app.deepEquals(cache.cache_filters[x], options.cache_refresh.filters);
+                        if (equals) {
+                            //get the cache data
+                            cache.cache_data[x] = cont2;
+                            //make the timestamp show that we have new data
+                            cache.timestamp = $.now();
+                            console.log("cached refresh for : " + refreshKey);
+                            localStorage.setItem(refreshKey,JSON.stringify(cache));
+                            break;
+                        }
+                    }
+                }
+                
+                
+            }
+            
             if(options.success) options.success(data);
             //if we reached here and options.cache is true it means we 
             //didnt have data in the local cache and had to do a server request
@@ -209,6 +254,13 @@ App.prototype.setUpAuto = function (field) {
     var id = field.autocomplete.id;
     $("#" + id).typeahead({
         source: function (query, process) {
+            if(field.autocomplete.cache_source){
+                //this autocomplete handler does not need to do a full
+                //server request since the required data could be local
+                //if the data is not local we do a full server request and cache the data for 
+                //subsequent use
+                
+            }
             app.autocomplete(field, function (resp) {
                 var data = resp.response.data;
                 field.autocomplete.data = data;
@@ -216,8 +268,7 @@ App.prototype.setUpAuto = function (field) {
                 if(!data[field.autocomplete.key]) return;
                 $.each(data[field.autocomplete.key], function (x) {
                     var val = data[field.autocomplete.key][x];
-                    if (val)
-                        arr.push(val);
+                    if (val) arr.push(val);
                 });
 
                 return process(arr);
@@ -384,7 +435,6 @@ App.prototype.autocomplete = function (field, func) {
             else {
                 func(data);
             }
-
         }
     });
 };

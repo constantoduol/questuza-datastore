@@ -1761,3 +1761,18 @@ App.prototype.verifyPayBill = function () {
     });
 
 };
+
+App.prototype.currentBillTier = function(){
+    app.xhr({
+        data: {},
+        service: "open_data_service",
+        message: "current_bill_tier",
+        load: true,
+        success: function (resp) {
+            var data = resp.response.data;
+            var usage = Math.round(parseFloat(data.cpu_usage)*100)/100;
+            var html = "Amount Due : <b>"+data.currency+" "+app.formatMoney(data.amount_due)+"</b><br>Weighted CPU Usage(seconds) : <b>"+usage+"</b>";
+            app.ui.modal(html,"Current Usage Statistics",{cancelText : "Done"});
+        }
+    }); 
+};
