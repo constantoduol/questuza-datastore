@@ -79,7 +79,7 @@ App.prototype.settings = {
     receipt_header: {
         type : "text",
         id : "receipt_header",
-        required : true,
+        required : false,
         value : "",
         label : "Receipt Header",
         "class" : "form-control"
@@ -87,7 +87,7 @@ App.prototype.settings = {
     receipt_footer: {
         type : "text",
         id : "receipt_footer",
-        required : true,
+        required : false,
         value : "",
         label : "Receipt Footer",
         "class" : "form-control"

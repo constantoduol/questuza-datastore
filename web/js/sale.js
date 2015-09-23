@@ -1,7 +1,5 @@
 App.prototype.loadCategories = function(id,type,filter){
     //load categories from the server
-    console.log(type);
-    console.log(filter);
     var request = {
         category_type : type,
         filter : filter //product filter
@@ -201,7 +199,7 @@ App.prototype.commitSale = function () {
         app.showMessage(app.context.no_product_selected);
         return;
     }
-
+    
     var m = app.ui.modal(app.context.commit_sale, "Commit Sale", {
         ok: function () {
             var request = {
@@ -217,12 +215,58 @@ App.prototype.commitSale = function () {
                 service : app.dominant_privilege,
                 message : "transact",
                 load: true,
-                cache_refresh : {
-                    service : "pos_admin_service", 
-                    message : "load_products",
-                    filters : {
-                        category : $("#products_table").attr("category"),
-                        sub_category : $("#products_table").attr("sub_category")
+                cache_update : {
+                    entity : "PRODUCT_DATA",
+                    columns : ["ID","PRODUCT_QTY"],
+                    cache_key : "pos_sale_service_all_products",
+                    where_cols : function(){return [];},
+                    where_values : function(){return [];},
+                    updater : function(data,cache){
+                        //we go through the product
+                        var userInterface = app.getSetting("user_interface");
+                        var updatedProductData = data.response.data;
+                        if (userInterface === "desktop") {
+                            $.each(cache.cache_data, function (x) {
+                                var cacheData = cache.cache_data[x];
+                                var productData = cacheData.response.data;
+                                $.each(productData.ID, function (y) {
+                                    var prodId = productData.ID[y];
+                                    var prodIndex = updatedProductData.ID.indexOf(prodId);
+                                    var updatedQty = updatedProductData.PRODUCT_QTY[prodIndex];
+                                    productData.PRODUCT_QTY[y] = parseFloat(updatedQty);
+                                });
+                            });
+                            return cache;
+                        }
+                        else if(userInterface === "touch"){
+                            //manually update the quantities if we are using the touch/category based interface
+                            //get the cache used by the touch interface
+                            var cachekey = app.dominant_privilege + "_load_products";
+                            var cacheString = localStorage.getItem(cachekey);
+                            if(cacheString){
+                                //we have the cache string 
+                                var touchCache = JSON.parse(cacheString);
+                                $.each(touchCache.cache_data, function (x) {
+                                    var cacheData = touchCache.cache_data[x];
+                                    var allProductData = cacheData.response.data.all_products;
+                                    var catProductData = cacheData.response.data.categorized_products;
+                                    $.each(allProductData.ID, function (y) {
+                                        var allProdId = allProductData.ID[y];
+                                        var allProdIndex = updatedProductData.ID.indexOf(allProdId);
+                                        var allUpdatedQty = updatedProductData.PRODUCT_QTY[allProdIndex];
+                                        allProductData.PRODUCT_QTY[y] = parseFloat(allUpdatedQty);
+                                        
+                                        var catProdId = catProductData.ID[y];
+                                        if(!catProdId) return;
+                                        var catProdIndex = updatedProductData.ID.indexOf(catProdId);
+                                        var catUpdatedQty = updatedProductData.PRODUCT_QTY[catProdIndex];
+                                        catProductData.PRODUCT_QTY[y] = parseFloat(catUpdatedQty);
+                                    });
+                                });
+                                localStorage.setItem(cachekey,JSON.stringify(touchCache));
+                            }
+                            
+                        }
                     }
                 },
                 success: function (data) {
@@ -245,9 +289,6 @@ App.prototype.commitSale = function () {
                 }
             });
             m.modal('hide');
-        },
-        cancel: function () {
-            //do nothing
         },
         okText: "Commit Sale",
         cancelText: "Cancel"
@@ -454,10 +495,8 @@ App.prototype.todaySales = function (username,category) {
 
 
 App.prototype.loadSaleSearch = function(){
-    debugger;
-    var heightCat = app.getDim()[1] * 0.57;
-    var heightSale = app.getDim()[1] * 0.3;
-    $("#product_category_card").css("height", heightCat + "px");
+    var heightSale = app.getDim()[1] * 0.67;
+    $("#product_category_card").css("overflow","inherit");
     $("#current_sale_card").css("height", heightSale + "px");
     var html = "<div class='input-group' style='margin-top:20px'>" +
             "<input type='text'  id='item_code' placeholder='Code' style='height:70px;width:10%;font-size:30px'>"+
@@ -474,15 +513,15 @@ App.prototype.loadSaleSearch = function(){
 //            $("#search_products").focus();
 //        }
 //    });
-//    $("#item_code").bind('keyup', 'return', function () {
-//        if ($("#item_code").val().trim().length === 0) {
-//            app.commitSale();
-//            $("#item_code").focus();
-//        }
-//        else {
-//          app.saleByCode();
-//        }
-//    });
+    $("#item_code").bind('keyup', 'return', function () {
+        if ($("#item_code").val().trim().length === 0) {
+            app.commitSale();
+            $("#item_code").focus();
+        }
+        else {
+          app.saleByCode();
+        }
+    });
 //    
 //    $(document).bind('keyup', 'shift+k', function () {
 //         $("#item_code").focus();

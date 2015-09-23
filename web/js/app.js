@@ -19,7 +19,6 @@ App.prototype.isMobile = function(){
 };
 
 
-
 App.prototype.xhr = function (options) {
     var request = {};
     request.request_header = {};
@@ -41,6 +40,9 @@ App.prototype.xhr = function (options) {
         if (cacheString) {
             //var cache = { cache_filters : [{category : 'food'}] , cache_data : [{PRODUCT_NAME : ['milk','bread']}],timestamp : 14153333}
             var cache = JSON.parse(cacheString);
+            $.each(options.data,function(item){ //remove nulls and undefined values
+                if(!options.data[item]) delete options.data[item];
+            });
             for(var x = 0; x < cache.cache_filters.length; x++){
                 var equals = app.deepEquals(cache.cache_filters[x], options.data);//we know that this is data for the same request if they are equal
                 if(equals){
@@ -65,6 +67,19 @@ App.prototype.xhr = function (options) {
         request.request_header.request_svc = request.request_header.request_svc +","+ options.cache_refresh.service;
         request.request_header.request_msg = request.request_header.request_msg +","+options.cache_refresh.message;
         $.extend(request.request_object,options.cache_refresh.filters);//merge what is in cache refresh filters to request_object
+    }
+    
+    if (options.cache_update) {
+        //refresh the local cache via a downstream link
+        request.request_header.request_svc = request.request_header.request_svc + "," + app.dominant_privilege;
+        request.request_header.request_msg = request.request_header.request_msg + "," + "fetch_item_by_id";
+        var itemByIdRequest = {
+            entity: options.cache_update.entity,
+            columns: options.cache_update.columns,
+            where_cols: options.cache_update.where_cols(),
+            where_values: options.cache_update.where_values()
+        };
+        $.extend(request.request_object, itemByIdRequest);//merge what is in cache refresh filters to request_object
     }
     
     return $.ajax({
@@ -115,10 +130,33 @@ App.prototype.xhr = function (options) {
                     }
                 }
                 
-                
             }
             
-            if(options.success) options.success(data);
+            if (options.cache_update) {
+                //transform the data to suit the original request and update the required cache
+                //structure of data without cache refresh is data.response.data;
+                //structure of data with cache refresh is data.response.service_message.data
+                //cache refresh does not support where the original request contains more than one service and message
+                var cont1 = {response: {data: ""}};
+                var cont2 = {response: {data: ""}};
+                var itemByIdKey = app.dominant_privilege + "_fetch_item_by_id";
+                var cacheKey = options.cache_update.cache_key;
+                cont1.response.data = data.response[originalService + "_" + originalMessage].data;
+                cont1.response._cache_status_ = data.response._cache_status_;
+                cont2.response.data = data.response[itemByIdKey].data;
+                data = cont1;
+
+                //expire the local cache using cont2
+                var cacheString = localStorage.getItem(cacheKey);
+                if (cacheString) { //if this does not exist then there is nothing to update
+                    var cache = JSON.parse(cacheString);
+                    var updatedCache = options.cache_update.updater(cont2,cache);//perform the specific update function
+                    if(updatedCache){
+                        localStorage.setItem(cacheKey,JSON.stringify(updatedCache));//save the updated cache
+                    }
+                }
+            }
+           
             //if we reached here and options.cache is true it means we 
             //didnt have data in the local cache and had to do a server request
             //so now we construct our local cache
@@ -139,6 +177,8 @@ App.prototype.xhr = function (options) {
                     localStorage.setItem(key,JSON.stringify(cache));
                 }
             }
+            
+            if(options.success) options.success(data);
             //expire any existing mappings
             
             $.each(data.response._cache_status_,function(key){
@@ -249,6 +289,61 @@ App.prototype.getUrlParameter = function (name) {
 };
 
 
+App.prototype.localAutocomplete = function(field,process){
+    var auto = field.autocomplete;
+    var key = auto.cache_source.service + "_" + auto.cache_source.message;
+    var cacheString = localStorage.getItem(key);
+    auto.cache_source.filters.business_id = localStorage.getItem("business_id");
+    function cacheSearch(cacheString) {
+        var cache = JSON.parse(cacheString);
+        var data;
+        for(var x = 0; x < cache.cache_filters.length; x++){
+            var equal = app.deepEquals(cache.cache_filters[x],auto.cache_source.filters);
+            if(equal){
+                data = cache.cache_data[x].response.data;
+                break;
+            }
+        }
+        field.autocomplete.data = data;
+        if(!data) return [];
+        //search through the data for matches
+        var search = new RegExp(auto.where_values()[0], "i");
+        var arr = $.grep(data[auto.key], function (value) {
+            return search.test(value);
+        });
+        var arr = arr.slice(0,auto.limit);
+        $.each(auto.join_to_key,function(x){
+            var joinKey = auto.join_to_key[x];
+            $.each(arr,function(y){
+                var currValue = arr[y];
+                var index = data[auto.key].indexOf(currValue);
+                var joinValue = data[joinKey][index];
+                arr[y] = arr[y]+"<span style='float:right'>"+joinValue+"</span>";
+            });
+        });
+        return arr;
+    }
+    if(cacheString){
+        //yay, we have the local cache set up a search
+        console.log("autocomplete for "+key+" from local cache");
+        return process(cacheSearch(cacheString));
+    }
+    else {
+        //we do a full request
+        app.xhr({
+            data: auto.cache_source.filters,
+            service: auto.cache_source.service,
+            message: auto.cache_source.message,
+            load: false,
+            cache: true,
+            success: function (data) {
+                var updatedCacheString = localStorage.getItem(key);
+                return process(cacheSearch(updatedCacheString));
+            }
+        });
+    }
+};
+
 
 App.prototype.setUpAuto = function (field) {
     var id = field.autocomplete.id;
@@ -259,25 +354,31 @@ App.prototype.setUpAuto = function (field) {
                 //server request since the required data could be local
                 //if the data is not local we do a full server request and cache the data for 
                 //subsequent use
+                app.localAutocomplete(field,process);
                 
             }
-            app.autocomplete(field, function (resp) {
-                var data = resp.response.data;
-                field.autocomplete.data = data;
-                var arr = [];
-                if(!data[field.autocomplete.key]) return;
-                $.each(data[field.autocomplete.key], function (x) {
-                    var val = data[field.autocomplete.key][x];
-                    if (val) arr.push(val);
-                });
+            else {
+                app.autocomplete(field, function (resp) {
+                    var data = resp.response.data;
+                    field.autocomplete.data = data;
+                    var arr = [];
+                    if (!data[field.autocomplete.key])
+                        return;
+                    $.each(data[field.autocomplete.key], function (x) {
+                        var val = data[field.autocomplete.key][x];
+                        if (val)
+                            arr.push(val);
+                    });
 
-                return process(arr);
-            });
+                    return process(arr);
+                });
+            }
         },
         minLength: 1,
         updater: function (item) {
             var data = field.autocomplete.data;
             var key = field.autocomplete.key;
+            item = item.indexOf("<span") > -1 ? item.substring(0,item.indexOf("<span")) : item;
             var index = data[key].indexOf(item);
             if (data.ID) {
                 $("#" + id).attr("current-item", data.ID[index]);

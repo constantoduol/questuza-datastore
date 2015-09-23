@@ -411,7 +411,7 @@ public class PosAdminService implements Serviceable {
 
     @Endpoint(name = "all_products", shareMethodWith = {"pos_sale_service", "pos_middle_service"},
             cacheModifiers = {"pos_admin_service_create_product","pos_admin_service_update_product"
-                    ,"pos_admin_service_delete_product","pos_sale_service_transact","pos_admin_service_transact"})
+                    ,"pos_admin_service_delete_product"})//"pos_sale_service_transact","pos_admin_service_transact"
     public void allProducts(Server serv, ClientWorker worker) {
         JSONObject requestData = worker.getRequestData();
         String cat = requestData.optString("category");
@@ -1026,11 +1026,15 @@ public class PosAdminService implements Serviceable {
         boolean isSafe = serv.isEntitySafe(entity,columns);
         if (isSafe) {
             Filter [] filters = new Filter[whereCols.length() + 1];
+            PropertyProjection[] projections = new PropertyProjection[columns.length()];
             for(int x = 0; x < filters.length; x++){
                filters[x] = new FilterPredicate(whereCols.optString(x), FilterOperator.EQUAL, whereValues.optString(x));
             }
+            for(int x = 0; x < projections.length; x++){
+                projections[x] = new PropertyProjection(columns.optString(x), String.class);
+            }
             filters[filters.length - 1] =  new FilterPredicate("BUSINESS_ID", FilterOperator.EQUAL, busId);
-            JSONObject data = Datastore.entityToJSON(Datastore.getMultipleEntities(entity, filters));
+            JSONObject data = Datastore.entityToJSON(Datastore.getMultipleEntities(entity,projections, filters));
             worker.setResponseData(data);
             serv.messageToClient(worker);
         } else {

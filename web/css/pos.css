@@ -375,3 +375,7 @@ form {
 .handsontableInput {
     width: auto !important;
 }
+
+.dropdown-menu li {
+  font-size : 30px;
+}

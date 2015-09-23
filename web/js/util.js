@@ -85,11 +85,6 @@ App.prototype.getDate = function () {
     return y + "-" + m + "-" + day;
 };
 
-App.prototype.getBusinessExtra = function (index) {
-    var extra = localStorage.getItem("business_extra_data");
-    return extra.split("<separator>")[index];
-};
-
 
 App.prototype.fetchItemById = function (options) {
     var request = {

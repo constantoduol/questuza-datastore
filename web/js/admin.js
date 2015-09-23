@@ -22,10 +22,18 @@ App.prototype.saveSettings = function () {
         success: function (resp) {
             var r = resp.response.data;
             if (r === "success") {
-                alert("Settings saved successfully");
+                app.briefShow({
+                    title: "Success",
+                    content: "Settings saved successfully",
+                    delay: 3000
+                });
             }
             else if (r === "fail") {
-                alert(resp.response.reason);
+                app.briefShow({
+                    title: "Fail",
+                    content: resp.response.reason,
+                    delay: 3000
+                });
             }
         }
     });
