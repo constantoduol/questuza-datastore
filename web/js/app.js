@@ -312,15 +312,17 @@ App.prototype.localAutocomplete = function(field,process){
             return search.test(value);
         });
         var arr = arr.slice(0,auto.limit);
-        $.each(auto.join_to_key,function(x){
-            var joinKey = auto.join_to_key[x];
-            $.each(arr,function(y){
-                var currValue = arr[y];
-                var index = data[auto.key].indexOf(currValue);
-                var joinValue = data[joinKey][index];
-                arr[y] = arr[y]+"<span style='float:right'>"+joinValue+"</span>";
+        if (auto.join_to_key) {
+            $.each(auto.join_to_key, function (x) {
+                var joinKey = auto.join_to_key[x];
+                $.each(arr, function (y) {
+                    var currValue = arr[y];
+                    var index = data[auto.key].indexOf(currValue);
+                    var joinValue = data[joinKey][index];
+                    arr[y] = arr[y] + "<span style='float:right'>" + joinValue + "</span>";
+                });
             });
-        });
+        }
         return arr;
     }
     if(cacheString){

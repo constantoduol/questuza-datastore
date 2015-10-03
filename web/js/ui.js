@@ -46,7 +46,7 @@ UI.prototype.modal = function (html, title, func) {
 
 UI.prototype.collapsible = function (idToAppend, title, content) {
     var id = "collapsible_" + Math.floor(Math.random() * 10000000);
-    var html = "<div class = 'panel-group' id = 'accordion' >" +
+    var html = "<div class = 'panel-group' id = "+id+" >" +
             "<div class = 'panel panel-default' >" +
             "<div class = 'panel-heading' >" +
             "<h4 class = 'panel-title' >" +

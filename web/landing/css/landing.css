@@ -1,0 +1,46 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Oct 1, 2015, 9:43:39 AM
+    Author     : conny
+*/
+
+.banner img {
+    width: 853px;
+    height: 480px;
+}
+
+.main_container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.button_area {
+    margin : 10px;
+}
+
+.button_area a {
+    margin-left: 50px;
+}
+
+.card {
+    margin-bottom : 40px;
+}
+
+h1 {
+    padding : 10px;
+    color : #1d8be8;
+}
+
+.panel-group {
+    padding : 10px;
+}
+
+.panel-title {
+    color : rgb(0, 150, 136)
+}

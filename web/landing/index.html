@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Quest Uza Point of Sale</title>
+        <link rel='shortcut icon' type='image/x-icon' href='/img/favicon.png' />
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <link href='/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+         <link href="/css/ripples.min.css" rel="stylesheet">
+        <link href="/css/material.min.css" rel="stylesheet">
+        <link href="/css/material-fullpalette.min.css" rel="stylesheet">
+        <link href="/css/jquery.dropdown.css" rel="stylesheet">
+        <link href="css/landing.css" rel="stylesheet">
+        <script type="text/javascript" src="/js/jquery-1.11.2.min.js"></script>
+        <script type="text/javascript" src="/js/ui.js"></script>
+        <script type="text/javascript" src="js/faq.js"></script>
+        <script type="text/javascript" src="js/landing.js"></script>
+    </head>
+    <body>
+        <div class="navbar navbar-material-light-blue-300">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-material-light-blue-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="http://www.questpico.com" style="background-color: black">
+                    <img src="/img/quest-pico.png" alt="logo" style="width:150px">
+                </a>
+            </div>
+            <div class="navbar-collapse collapse navbar-material-light-blue-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="javascript:void(0)">Documentation</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#billing">Billing</a></li>
+                    <li class="dropdown">
+                        <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b><div class="ripple-wrapper"></div></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="javascript:void(0)">Action</a></li>
+                            <li><a href="javascript:void(0)">Another action</a></li>
+                            <li><a href="javascript:void(0)">Something else here</a></li>
+                            <li class="divider"></li>
+                            <li class="dropdown-header">Dropdown header</li>
+                            <li><a href="javascript:void(0)">Separated link</a></li>
+                            <li><a href="javascript:void(0)">One more separated link</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/index.html">Sign In</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="main_container">
+            <div class="card" style="text-align: center">
+                <div class="banner">
+                    <img src="img/banner.png" alt="banner">
+                </div>
+                <div class="button_area">
+                    <a href="" class="btn btn-info">Get the Android App</a> 
+                    <a href="" class="btn btn-info">Sign Up For Free</a> 
+                    <a href="" class="btn btn-info">See the Demo</a> 
+                </div>
+            </div>
+            <div class="card" id="faq">
+                <h1>FAQ</h1>
+                <hr>
+            </div>
+              <div class="card" id="billing">
+                <h1>Billing</h1>
+                <hr>
+            </div>
+            <script type="text/javascript">land.initFAQ();</script>
+        </div>
+    </body>
+</html>

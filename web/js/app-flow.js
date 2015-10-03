@@ -177,6 +177,7 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
+                        cache_source : {message : "all_products",service : "pos_admin_service",filters : {category : "all"}},
                         data: {},
                         after: function (data, index) {
                             var currentProduct = data.PRODUCT_NAME[index];
@@ -281,6 +282,7 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
+                        cache_source : {message : "all_products",service : "pos_admin_service",filters : {category : "all"}},
                         data: {},
                         after: function (data, index) {
                             var currentProduct = data.PRODUCT_NAME[index];
@@ -478,6 +480,7 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
+                        cache_source : {message : "all_products",service : "pos_admin_service",filters : {category : "all"}},
                         data: {},
                         after: function (data, index) {
                             var prodId = data.ID[index];
