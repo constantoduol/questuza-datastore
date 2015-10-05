@@ -8,7 +8,7 @@ App.prototype.loadCategories = function(id,type,filter){
         data : request,
         service : app.dominant_privilege,
         message : "product_categories",
-        load : false,
+        load : true,
         cache : true,
         success : function(data){
             //if the user is uncategorized or all show all the categories
@@ -93,7 +93,7 @@ App.prototype.loadProducts = function(category,sub_category){
         data : request,
         service : app.dominant_privilege,
         message : "load_products",
-        load : false,
+        load : true,
         cache : true,
         success : function(resp){
             var p = resp.response.data.categorized_products;
@@ -271,6 +271,7 @@ App.prototype.commitSale = function () {
                 },
                 success: function (data) {
                     var resp = data.response.data;
+                    console.log(resp);
                     if (resp.status === "success") {
                         //transaction was successful
                         var rCount = app.getSetting("no_of_receipts");
@@ -284,7 +285,7 @@ App.prototype.commitSale = function () {
                         app.showMessage(app.context.transact_success);
                     }
                     else if (resp.status === "fail") {
-                        app.showMessage(app.context.transact_fail);
+                        app.showMessage(resp.reason);
                     }
                 }
             });
@@ -499,6 +500,7 @@ App.prototype.loadSaleSearch = function(){
     $("#product_category_card").css("overflow","inherit");
     $("#current_sale_card").css("height", heightSale + "px");
     var html = "<div class='input-group' style='margin-top:20px'>" +
+            "<div id='error_space_sale' class='error' ></div>"+
             "<input type='text'  id='item_code' placeholder='Code' style='height:70px;width:10%;font-size:30px'>"+
             "<input type='text'  id='search_products' placeholder='Search Products' style='height:70px;width:90%;font-size:30px'>" +
             "<div class='input-group-addon search' id='search_link'>" +
@@ -507,12 +509,12 @@ App.prototype.loadSaleSearch = function(){
     $("#search_link").click(function(){
         app.allProducts(app.pages.sale);
     });
-//    $("#search_products").bind('keyup', 'return', function () {
-//        if($("#search_products").val().trim().length === 0 ){
-//            app.commitSale();
-//            $("#search_products").focus();
-//        }
-//    });
+    $("#search_products").bind('keyup', 'return', function () {
+        if($("#search_products").val().trim().length === 0 ){
+            app.commitSale();
+            $("#search_products").focus();
+        }
+    });
     $("#item_code").bind('keyup', 'return', function () {
         if ($("#item_code").val().trim().length === 0) {
             app.commitSale();
@@ -663,4 +665,48 @@ App.prototype.clearSale = function(){
     $("#total_qty").html("0");
     $("#total_amount").html("0.00");
     app.getSetting("user_interface") === "desktop" ? app.loadSaleSearch() : app.loadCategories("category_area", "category","");  
+};
+
+App.prototype.quantityPicker = function (options) {
+    var html = "<div class = 'input-group' >" +
+            "<input type = 'number' class = 'form-control' id = 'select_quantity' placeholder = 'Quantity' style='height : 60px;font-size:20px' value=1 >" +
+            "<div class = 'input-group-addon' style='padding:0px'>" +
+            "<div class='toggle-button' style='background-color:green' id='increase_qty'> + </div>" +
+            "<div class='toggle-button' style='background-color:red' id='decrease_qty'> - </div>" +
+            "</div>" +
+            "</div>";
+    var m = app.ui.modal(html, "Quantity", {
+        okText: "Done",
+        ok: function () {
+            var qty = parseInt($("#select_quantity").val());
+            qty = qty <= 0 || !qty ? 1 : qty;
+            for (var x = 0; x < qty; x++) {
+                app.sale({
+                    data: options.data,
+                    index: options.index,
+                    ids: options.data.ID
+                });
+            }
+            app.runLater(100, function () {
+                $("#search_products").val("");
+                $("#search_products").focus();
+            });
+            m.modal('hide');
+        }
+    });
+    
+    app.runLater(200, function () {
+        $("#modal_area_button_ok").focus();
+    });
+    
+    $("#increase_qty").click(function () {
+        var qty = parseInt($("#select_quantity").val());
+        qty++;
+        $("#select_quantity").val(qty);
+    });
+    $("#decrease_qty").click(function () {
+        var qty = parseInt($("#select_quantity").val());
+        qty = qty <= 0 ? 1 : qty - 1;
+        $("#select_quantity").val(qty);
+    });
 };

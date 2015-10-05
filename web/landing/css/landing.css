@@ -8,6 +8,11 @@ and open the template in the editor.
     Author     : conny
 */
 
+body{
+     font-family: Roboto;
+     font-size: 16px;
+}
+
 .banner img {
     width: 853px;
     height: 480px;
@@ -43,4 +48,13 @@ h1 {
 
 .panel-title {
     color : rgb(0, 150, 136)
+}
+
+table>tbody>tr:nth-of-type(even) {
+   background-color: rgba(173, 216, 230, 0.2);
+   cursor: pointer;
+}
+table>tbody>tr:hover {
+   background-color: #1d8be8;
+   color : white;
 }

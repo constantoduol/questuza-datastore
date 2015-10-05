@@ -16,6 +16,7 @@ import com.quest.access.useraccess.services.Message;
 import com.quest.access.useraccess.services.annotations.Endpoint;
 import com.quest.access.useraccess.services.annotations.WebService;
 import com.quest.servlets.ClientWorker;
+import java.util.ArrayList;
 import java.util.Date;
 
 import java.util.logging.Level;
@@ -59,13 +60,54 @@ public class PosSaleService implements Serviceable {
         String type = requestData.optString("tran_type");
         String tranFlag = requestData.optString("tran_flag");
         String userName = worker.getSession().getAttribute("username").toString();
+        ArrayList<JSONObject> loadedProdData = new ArrayList();
+        
+        for(int x = 0; x < ids.length(); x++){
+            //check if quantities are available and give an error if they
+            //are not available
+            String prodId = ids.optString(x);
+            Filter filter = new FilterPredicate("ID", FilterOperator.EQUAL, prodId);
+            Filter filter1 = new FilterPredicate("BUSINESS_ID", FilterOperator.EQUAL, busId);
+            JSONObject prodData = Datastore.entityToJSONArray(Datastore.getSingleEntity("PRODUCT_DATA", filter, filter1));
+            loadedProdData.add(prodData);
+            String parentProduct = prodData.optJSONArray("PRODUCT_PARENT").optString(0);
+            Filter filter2 = new FilterPredicate("ID",FilterOperator.EQUAL,parentProduct);
+            
+            Double noOfUnits = qtys.optDouble(x);
+            double uSize = prodData.optJSONArray("PRODUCT_UNIT_SIZE").optDouble(0, 1);
+            Double unitSize = prodData.optJSONArray("PRODUCT_UNIT_SIZE").optDouble(0, 1) == 0 ? 1 : uSize;
+            Double unitsSold = noOfUnits * unitSize;
+            double productTotalqty;
+            
+            if (parentProduct.isEmpty()) {
+                productTotalqty = prodData.optJSONArray("PRODUCT_QTY").optDouble(0);
+                //no parent product
+            } else {
+                JSONObject parentProdData = Datastore.entityToJSONArray(Datastore.getSingleEntity("PRODUCT_DATA", filter1, filter2));
+                productTotalqty = parentProdData.optJSONArray("PRODUCT_QTY").optDouble(0);
+            }
+            
+            if (unitsSold > productTotalqty && type.equals("0") && bType.equals("goods")) {
+                //send an error message
+                int prodIndex = prodData.optJSONArray("ID").toList().indexOf(prodId);
+                String prodName = prodData.optJSONArray("PRODUCT_NAME").optString(prodIndex);
+                JSONObject response = new JSONObject();
+                response.put("status", Message.FAIL);
+                response.put("reason", "Insufficient stock available for product '"+prodName+"' only "+productTotalqty+" available");
+                worker.setResponseData(response);
+                serv.messageToClient(worker);
+                return; //consider this for services where stock is tracked
+                //not enough stock to process the sale
+            }
+        }
+        
         for (int x = 0; x < ids.length(); x++) {
             try {
                 String prodId = ids.optString(x);
                 String transId = new UniqueRandom(50).nextMixedRandom();
                 Filter filter = new FilterPredicate("ID",FilterOperator.EQUAL,prodId);
                 Filter filter1 = new FilterPredicate("BUSINESS_ID",FilterOperator.EQUAL,busId);
-                JSONObject prodData = Datastore.entityToJSONArray(Datastore.getSingleEntity("PRODUCT_DATA", filter,filter1));
+                JSONObject prodData = loadedProdData.get(x);
                 double bp = prodData.optJSONArray("BP_UNIT_COST").optDouble(0);
                 double sp = prodData.optJSONArray("SP_UNIT_COST").optDouble(0);
                 double tax = prodData.optJSONArray("TAX").optDouble(0);
@@ -91,11 +133,8 @@ public class PosSaleService implements Serviceable {
                 Double cost = sp * noOfUnits;
                 Double bPrice = bp * noOfUnits;
                 Double profit = cost - bPrice;
-                if (unitsSold > productTotalqty && type.equals("0") && bType.equals("goods")) {
-                    continue; //consider this for services where stock is tracked
-                    //not enough stock to process the sale
-                }
-                else if (type.equals("0")) {
+                
+                if (type.equals("0")) {
                     narration = narration.equals("") ? "Sale to Customer" : narration;
                     if (tax > 0) {
                         Double taxValue = (tax / 100) * cost;

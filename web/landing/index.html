@@ -5,15 +5,18 @@
         <link rel='shortcut icon' type='image/x-icon' href='/img/favicon.png' />
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-         <link href='/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
-         <link href="/css/ripples.min.css" rel="stylesheet">
-        <link href="/css/material.min.css" rel="stylesheet">
+        <link href='/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
         <link href="/css/material-fullpalette.min.css" rel="stylesheet">
         <link href="/css/jquery.dropdown.css" rel="stylesheet">
+         <link href="http://fonts.googleapis.com/css?family=Roboto:400" rel="stylesheet" type="text/css">
         <link href="css/landing.css" rel="stylesheet">
         <script type="text/javascript" src="/js/jquery-1.11.2.min.js"></script>
-        <script type="text/javascript" src="/js/ui.js"></script>
+         <script type="text/javascript" src="/js/ui.js"></script>
+        <script type="text/javascript" src="/js/onload.js"></script>
+         <script type="text/javascript" src="/js/app.js"></script>
+          <script type="text/javascript" src="/js/util.js"></script>
         <script type="text/javascript" src="js/faq.js"></script>
+        <script type="text/javascript" src="js/billing.js"></script>
         <script type="text/javascript" src="js/landing.js"></script>
     </head>
     <body>
@@ -70,8 +73,22 @@
               <div class="card" id="billing">
                 <h1>Billing</h1>
                 <hr>
+                <div style="padding:20px">
+                    <p>
+                        <b>Range(Weighted Seconds)*</b> - This is a range of values that show your usage on the cloud point of sale. 
+                    Every time you use your point of sale account, your weighted seconds usage increases. The ranges shown below
+                    are for a month period duration. Remember you only pay for what you used.
+                    </p>
+                    <p>
+                        <b>Daily Average Customers** - NB </b>: This is an approximation of the average number of daily customers served at the specified tier
+                    level and may not be equivalent to the physical number of customer served.
+                    </p>
+                </div>
             </div>
-            <script type="text/javascript">land.initFAQ();</script>
+            <script type="text/javascript">
+                land.initFAQ();
+                land.initBilling();
+             </script>
         </div>
     </body>
 </html>

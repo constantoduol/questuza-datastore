@@ -86,14 +86,9 @@ AppData.prototype.formData = {
                         after: function (data, index) {
                             $("#category_area").html("");
                             $("#product_display_area").html("");
-                            app.sale({
+                            app.quantityPicker({
                                 data: data,
-                                index: index,
-                                ids: data.ID
-                            });
-                            app.runLater(100, function () {
-                                $("#search_products").val("");
-                                $("#search_products").focus();
+                                index: index
                             });
                         }
                     }}
