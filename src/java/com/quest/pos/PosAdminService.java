@@ -5,6 +5,7 @@
  */
 package com.quest.pos;
 
+import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.PropertyProjection;
@@ -166,7 +167,7 @@ public class PosAdminService implements Serviceable {
             }
         }
         if (bType.equals("goods")) {
-            String[] propNames1 = new String[]{"ID", "BUSINESS_ID", "PRODUCT_ID", "TRAN_TYPE", "STOCK_COST_BP",
+            String[] propNames1 = new String[]{"TRANS_ID", "BUSINESS_ID", "PRODUCT_ID", "TRAN_TYPE", "STOCK_COST_BP",
                 "STOCK_COST_SP", "STOCK_QTY", "PROFIT", "TRAN_FLAG", "NARRATION", "CREATED", "USER_NAME"};
             Object[] values1 = new Object[]{transId, busId, prodId, type.toString(), costBp.toString(),
                 costSp.toString(), stockQty, "0", tranFlag, narr, timestamp(), userName};
@@ -182,6 +183,9 @@ public class PosAdminService implements Serviceable {
         String busId = request.optString("business_id");
         String supId = request.optString("supplier_id");
         String prodId = request.optString("product_id");
+        String cursor = request.optString("cursor");
+        int limit = request.optInt("limit",100);
+        
         Filter filter1 = new FilterPredicate("BUSINESS_ID", FilterOperator.EQUAL, busId);
         Filter filter2 = new FilterPredicate("SUPPLIER_ID", FilterOperator.EQUAL, supId);
         Filter filter3 = new FilterPredicate("PRODUCT_ID", FilterOperator.EQUAL, prodId);
@@ -205,12 +209,17 @@ public class PosAdminService implements Serviceable {
             //this is a relationship thing
             //i hate relationships
             //get the name of the supplier and account
+            FetchOptions options = FetchOptions.Builder.withLimit(limit);
+            if (cursor != null) options.startCursor(Cursor.fromWebSafeString(cursor));
+            
             String[] sortProps = new String[]{"SUPPLIER_NAME", null};
             SortDirection[] dirs = new SortDirection[]{SortDirection.ASCENDING, null};
-            resp = Datastore.entityToJSON(Datastore.twoWayJoin(
+            resp = Datastore.twoWayJoin(
                     new String[]{"SUPPLIER_DATA", "PRODUCT_SUPPLIER_DATA"},
                     new String[]{"ID", "SUPPLIER_ID"},
-                    sortProps, dirs, new Filter[]{}, new Filter[]{filter1, filter3}));
+                    sortProps, dirs, 
+                    null,options,
+                    new Filter[]{}, new Filter[]{filter1, filter3});
         }
 
         worker.setResponseData(resp);
@@ -459,6 +468,7 @@ public class PosAdminService implements Serviceable {
             Datastore.updateSingleEntity("PRODUCT_DATA", new String[]{"PRODUCT_QTY"}, new String[]{newProductQty.toString()}, filter, filter1);
         }
     }
+    
 
     @Endpoint(name = "save_grid_edit")
     public void saveGridEdit(Server serv, ClientWorker worker) {
@@ -506,7 +516,7 @@ public class PosAdminService implements Serviceable {
             JSONObject requestData = worker.getRequestData();
             String entity = requestData.optString("entity");
             JSONArray columns = requestData.optJSONArray("column");
-            int limit = requestData.optInt("limit");
+            int limit = requestData.optInt("limit",100);
             String orderBy = requestData.optString("orderby");
             String orderDir = requestData.optString("order_direction");
             String busId = requestData.optString("business_id");
@@ -536,21 +546,6 @@ public class PosAdminService implements Serviceable {
             Filter[] filters = new Filter[aFilters.size()];
             filters = aFilters.toArray(filters);
             JSONObject data = Datastore.entityToJSON(Datastore.getMultipleEntities(entity,FetchOptions.Builder.withLimit(limit), filters));
-            
-//            JSONArray busIds = data.optJSONArray("BUSINESS_ID");
-//            if (busIds != null) {
-//                for (int x = 0; x < busIds.length(); x++) {
-//                    String id = busIds.optString(x);
-//                    if (!id.equals(busId)) {
-//                        data.optJSONArray("BUSINESS_ID").put(x, null);
-//                        Iterator<String> iter = data.keys();
-//                        while (iter.hasNext()) {
-//                            String key = iter.next();
-//                            data.optJSONArray(key).put(x, null);
-//                        }
-//                    }
-//                }
-//            }
             worker.setResponseData(data);
             serv.messageToClient(worker);
         } catch (Exception ex) {
@@ -584,6 +579,8 @@ public class PosAdminService implements Serviceable {
         String userName = requestData.optString("user_name");
         String busId = requestData.optString("business_id");
         String supId = requestData.optString("supplier_id");
+        String cursor = requestData.optString("cursor");
+        int limit = requestData.optInt("limit",100);
 
         String lbeginDate = toTimestamp(beginDate);
         String lendDate = toTimestamp(endDate);
@@ -598,18 +595,22 @@ public class PosAdminService implements Serviceable {
         Filter extraFilter = userName.equals("all") ? filter : filter3;
         Filter extraFilter1 = supId.equals("all") ? filter : filter5;
         Filter extraFilter2 = prodId.equals("all") ? filter : filter4;
-
+        
+        FetchOptions options = FetchOptions.Builder.withLimit(limit);
+        if (cursor != null) options.startCursor(Cursor.fromWebSafeString(cursor));
         String[] entityNames = new String[]{"SUPPLIER_ACCOUNT", "PRODUCT_DATA", "SUPPLIER_ACCOUNT", "SUPPLIER_DATA"};
         String[] joinProps = new String[]{"PRODUCT_ID", "ID", "SUPPLIER_ID", "ID"};
         String[] sortProps = new String[]{null, null, null, null};
         SortDirection[] dirs = new SortDirection[]{null, null, null, null};
+        FetchOptions [] foptions = new FetchOptions[]{options,null,options,null};
         Filter[][] filters = new Filter[][]{
             new Filter[]{filter1, filter2, filter, extraFilter, extraFilter1, extraFilter2},
             new Filter[]{},
             new Filter[]{filter1, filter2, filter, extraFilter, extraFilter1, extraFilter2},
             new Filter[]{}};
 
-        JSONObject data = Datastore.entityToJSON(Datastore.multiJoin(entityNames, joinProps, sortProps, dirs, filters));
+        JSONObject data = Datastore.multiJoin(entityNames, joinProps, sortProps, dirs,foptions, filters);
+        data.remove("joined");
         worker.setResponseData(data);
         serv.messageToClient(worker);
 
@@ -622,6 +623,8 @@ public class PosAdminService implements Serviceable {
         String prodId = requestData.optString("id");
         String userName = requestData.optString("user_name");
         String busId = requestData.optString("business_id");
+        String cursor = requestData.optString("cursor");
+        int limit = requestData.optInt("limit",100);
 
         String lbeginDate = toTimestamp(beginDate);
         String lendDate = toTimestamp(endDate);
@@ -639,17 +642,22 @@ public class PosAdminService implements Serviceable {
         JSONObject data;
         String[] entityNames = new String[]{"PRODUCT_DATA", "COMMISSION_DATA"};
         String[] joinProps = new String[]{"ID", "PRODUCT_ID"};
+        
+        FetchOptions options = FetchOptions.Builder.withLimit(limit);
+        if (cursor != null)  options.startCursor(Cursor.fromWebSafeString(cursor));
+        
         if (prodId.equals("all")) {
-            data = Datastore.entityToJSON(
-                    Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+            data = Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+                            null,options,
                             new Filter[]{},
-                            new Filter[]{filter, filter1, filter2, extraFilter}));
+                            new Filter[]{filter, filter1, filter2, extraFilter});
         } else {
-            data = Datastore.entityToJSON(
-                    Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+            data = Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+                            null,options,
                             new Filter[]{},
-                            new Filter[]{filter, filter1, filter2, filter4, extraFilter}));
+                            new Filter[]{filter, filter1, filter2, filter4, extraFilter});
         }
+        data.remove("joined");
         worker.setResponseData(data);
         serv.messageToClient(worker);
     }
@@ -661,6 +669,8 @@ public class PosAdminService implements Serviceable {
         String prodId = requestData.optString("id");
         String userName = requestData.optString("user_name");
         String busId = requestData.optString("business_id");
+        String cursor = requestData.optString("cursor");
+        int limit = requestData.optInt("limit",100);
 
         String lbeginDate = toTimestamp(beginDate);
         String lendDate = toTimestamp(endDate);
@@ -678,17 +688,21 @@ public class PosAdminService implements Serviceable {
         JSONObject data;
         String[] entityNames = new String[]{"PRODUCT_DATA", "TAX_DATA"};
         String[] joinProps = new String[]{"ID", "PRODUCT_ID"};
+        
+        FetchOptions options = FetchOptions.Builder.withLimit(limit);
+        if (cursor != null) options.startCursor(Cursor.fromWebSafeString(cursor));
         if (prodId.equals("all")) {
-            data = Datastore.entityToJSON(
-                    Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+            data = Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+                            null,options,
                             new Filter[]{},
-                            new Filter[]{filter, filter1, filter2, extraFilter}));
+                            new Filter[]{filter, filter1, filter2, extraFilter});
         } else {
-            data = Datastore.entityToJSON(
-                    Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+            data = Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+                            null,options,
                             new Filter[]{},
-                            new Filter[]{filter, filter1, filter2, filter4, extraFilter}));
+                            new Filter[]{filter, filter1, filter2, filter4, extraFilter});
         }
+        data.remove("joined");
         worker.setResponseData(data);
         serv.messageToClient(worker);
 
@@ -718,7 +732,7 @@ public class PosAdminService implements Serviceable {
         beginDate = beginDate.equals("server_time_begin") ? getTodayBeginDate() : beginDate;
         String endDate = requestData.optString("end_date");
         endDate = endDate.equals("server_time_end") ? getTodayEndDate() : endDate;
-
+        
         String lbeginDate = toTimestamp(beginDate);
         String lendDate = toTimestamp(endDate);
 
@@ -726,6 +740,8 @@ public class PosAdminService implements Serviceable {
         String userName = requestData.optString("user_name");
         String busId = requestData.optString("business_id");
         String category = requestData.optString("product_categories");
+        String cursor = requestData.optString("cursor");
+        int limit = requestData.optInt("limit",100);
         //what we need
         //stock_id, stock name,stock_bp, stock_sp,stock_qty, profit,type,narr,date,initiator
         Filter filter = new FilterPredicate("BUSINESS_ID", FilterOperator.EQUAL, busId);
@@ -740,21 +756,27 @@ public class PosAdminService implements Serviceable {
 
         String[] sortProps = new String[]{"CREATED", null};
         SortDirection[] dirs = new SortDirection[]{SortDirection.DESCENDING, null};
+        
+        FetchOptions options = FetchOptions.Builder.withLimit(limit);
+        if (cursor != null) options.startCursor(Cursor.fromWebSafeString(cursor));
+
         JSONObject data;
         if (prodId.equals("all")) {
             String[] entityNames = new String[]{"STOCK_DATA", "PRODUCT_DATA"};
             String[] joinProps = new String[]{"PRODUCT_ID", "ID"};
-            data = Datastore.entityToJSON(
-                    Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+            data = Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+                            options,null,
                             new Filter[]{filter, filter1, filter2, extraFilter},
-                            new Filter[]{extraFilter1}));
+                            new Filter[]{extraFilter1});
         } else {
             String[] entityNames = new String[]{"STOCK_DATA", "PRODUCT_DATA"};
             String[] joinProps = new String[]{"PRODUCT_ID", "ID"};
-            data = Datastore.entityToJSON(Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
-                    new Filter[]{filter, filter1, filter2, extraFilter, filter4}, new Filter[]{extraFilter1}));
+            data = Datastore.twoWayJoin(entityNames, joinProps, sortProps, dirs,
+                    options,null,
+                    new Filter[]{filter, filter1, filter2, extraFilter, filter4}, 
+                    new Filter[]{extraFilter1});
         }
-
+        data.remove("joined");
         worker.setResponseData(data);
         serv.messageToClient(worker);
 

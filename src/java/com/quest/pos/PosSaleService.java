@@ -10,6 +10,7 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.quest.access.common.UniqueRandom;
 import com.quest.access.common.datastore.Datastore;
+import com.quest.access.common.io;
 import com.quest.access.control.Server;
 import com.quest.access.useraccess.Serviceable;
 import com.quest.access.useraccess.services.Message;
@@ -127,7 +128,7 @@ public class PosSaleService implements Serviceable {
                     JSONObject parentProdData = Datastore.entityToJSONArray(Datastore.getSingleEntity("PRODUCT_DATA", filter1,filter2));
                     productTotalqty = parentProdData.optJSONArray("PRODUCT_QTY").optDouble(0);
                 }
-
+                
                 Double unitsSold = noOfUnits * unitSize;
                 Double newQty = productTotalqty - unitsSold; //reduce the quantity, customer is buying stock
                 Double cost = sp * noOfUnits;

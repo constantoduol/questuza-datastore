@@ -82,7 +82,11 @@ AppData.prototype.formData = {
                         join_data : [],
                         data: {},
                         selected: [],
-                        cache_source : {message : "all_products",service : "pos_sale_service",filters : {category : "all"}},//search locally first
+                        cache_source : {
+                            message : function(){return "all_products"},
+                            service : function(){return app.dominant_privilege;},
+                            filters : {category : "all"}
+                        },//search locally first
                         after: function (data, index) {
                             $("#category_area").html("");
                             $("#product_display_area").html("");
@@ -172,7 +176,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
-                        cache_source : {message : "all_products",service : "pos_admin_service",filters : {category : "all"}},
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {},
                         after: function (data, index) {
                             var currentProduct = data.PRODUCT_NAME[index];
@@ -212,6 +224,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_CATEGORY",
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {}
                     }
                 },
@@ -230,6 +251,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_SUB_CATEGORY",
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {}
                     }
                 },
@@ -248,6 +278,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {},
                         after: function (data, index) {
                             var prodId = data.ID[index];
@@ -277,7 +316,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
-                        cache_source : {message : "all_products",service : "pos_admin_service",filters : {category : "all"}},
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {},
                         after: function (data, index) {
                             var currentProduct = data.PRODUCT_NAME[index];
@@ -335,6 +382,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_CATEGORY",
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {}
                     }
                 },
@@ -353,6 +409,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_SUB_CATEGORY",
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {}
                     }
                 },
@@ -371,6 +436,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {},
                         after: function (data, index) {
                             var prodId = data.ID[index];
@@ -475,7 +549,15 @@ AppData.prototype.formData = {
                         order_direction: "ASC",
                         limit: 10,
                         key: "PRODUCT_NAME",
-                        cache_source : {message : "all_products",service : "pos_admin_service",filters : {category : "all"}},
+                        cache_source: {
+                            message: function () {
+                                return "all_products"
+                            },
+                            service: function () {
+                                return app.dominant_privilege;
+                            },
+                            filters: {category: "all"}
+                        }, //search locally first
                         data: {},
                         after: function (data, index) {
                             var prodId = data.ID[index];

@@ -16,7 +16,7 @@ App.prototype.saveSettings = function () {
     });
     app.xhr({
         data : request,
-        service : "open_data_service",
+        service : "closed_data_service",
         message : "save_settings",
         load: false,
         success: function (resp) {
@@ -168,7 +168,7 @@ App.prototype.createUser = function () {
     if (!data)
         return;
     var role = data.user_role.value;
-    var priv = role === "admin" ? ["pos_admin_service", "user_service"] : ["pos_sale_service"];
+    var priv = role === "admin" ? ["pos_admin_service", "user_service","closed_data_service"] : ["pos_sale_service"];
     var reg = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
     var emailValid = reg.test(data.email_address.value);
     if (!emailValid) {
@@ -676,7 +676,7 @@ App.prototype.gridEdit = function(ids,columns,headers,values){
         col_names : headers,
         load_column_by_column : true, 
         init_data : values,
-        disabled : [0,7,8],
+        disabled : [0,1,8,9],
         col_types: function () {
             var types = [];
             $.each(headers, function (index) {
@@ -748,26 +748,26 @@ App.prototype.allProducts = function (handler) {
                     });
                     
                     if (bType === "goods") {
-                        headers = ["Product Name", "Category","S/Category", "BP/Unit", "SP/Unit", "Available Qty", "Reminder Limit", "Date Created", "Expiry Date"];
-                        values = [resp.PRODUCT_NAME, resp.PRODUCT_CATEGORY,resp.PRODUCT_SUB_CATEGORY, resp.BP_UNIT_COST, resp.SP_UNIT_COST, resp.PRODUCT_QTY,
+                        headers = ["Code","Product Name", "Category","S/Category", "BP/Unit", "SP/Unit", "Available Qty", "Reminder Limit", "Date Created", "Expiry Date"];
+                        values = [resp.PRODUCT_CODE,resp.PRODUCT_NAME, resp.PRODUCT_CATEGORY,resp.PRODUCT_SUB_CATEGORY, resp.BP_UNIT_COST, resp.SP_UNIT_COST, resp.PRODUCT_QTY,
                             resp.PRODUCT_REMIND_LIMIT, resp.CREATED, resp.PRODUCT_EXPIRY_DATE];
-                        columns = ["PRODUCT_NAME", "PRODUCT_CATEGORY","PRODUCT_SUB_CATEGORY", "BP_UNIT_COST", "SP_UNIT_COST","PRODUCT_QTY",
+                        columns = ["PRODUCT_CODE","PRODUCT_NAME", "PRODUCT_CATEGORY","PRODUCT_SUB_CATEGORY", "BP_UNIT_COST", "SP_UNIT_COST","PRODUCT_QTY",
                             "PRODUCT_REMIND_LIMIT", "CREATED","PRODUCT_EXPIRY_DATE"];
                         
                     }
                     else if (bType === "services") {
                         if (app.getSetting("track_stock") === "1") {
-                            headers = ["Product Name", "Category","S/Category", "SP/Unit","Available Qty", "Date Created"];
-                            values = [resp.PRODUCT_NAME, resp.PRODUCT_CATEGORY,resp.PRODUCT_SUB_CATEGORY, resp.SP_UNIT_COST, 
+                            headers = ["Code","Product Name", "Category","S/Category", "SP/Unit","Available Qty", "Date Created"];
+                            values = [resp.PRODUCT_CODE,resp.PRODUCT_NAME, resp.PRODUCT_CATEGORY,resp.PRODUCT_SUB_CATEGORY, resp.SP_UNIT_COST, 
                                 resp.PRODUCT_QTY, resp.CREATED];
-                            columns = ["PRODUCT_NAME", "PRODUCT_CATEGORY","PRODUCT_SUB_CATEGORY", "SP_UNIT_COST", 
+                            columns = ["PRODUCT_CODE","PRODUCT_NAME", "PRODUCT_CATEGORY","PRODUCT_SUB_CATEGORY", "SP_UNIT_COST", 
                                 "PRODUCT_QTY","CREATED"];
                             
                         }
                         else {
-                            headers = ["Product Name", "Category","S/Category" ,"SP/Unit", "Date Created"];
-                            values = [resp.PRODUCT_NAME, resp.PRODUCT_CATEGORY,resp.PRODUCT_SUB_CATEGORY, resp.SP_UNIT_COST, resp.CREATED];
-                            columns = ["PRODUCT_NAME", "PRODUCT_CATEGORY","PRODUCT_SUB_CATEGORY", "SP_UNIT_COST", "CREATED"];
+                            headers = ["Code","Product Name", "Category","S/Category" ,"SP/Unit", "Date Created"];
+                            values = [resp.PRODUCT_CODE,resp.PRODUCT_NAME, resp.PRODUCT_CATEGORY,resp.PRODUCT_SUB_CATEGORY, resp.SP_UNIT_COST, resp.CREATED];
+                            columns = ["PRODUCT_CODE","PRODUCT_NAME", "PRODUCT_CATEGORY","PRODUCT_SUB_CATEGORY", "SP_UNIT_COST", "CREATED"];
                         }
                     }
                      app.ui.table({
@@ -778,7 +778,7 @@ App.prototype.allProducts = function (handler) {
                         style : "",
                         mobile_collapse : true,
                         transform : {
-                            0: function(value,index){
+                            1: function(value,index){
                                 return "<a href='#' id=item_select_" + index + ">" + value + "</a>";
                             }
                         }
@@ -842,7 +842,7 @@ App.prototype.goodsStockHistory = function () {
         load: true,
         success: function (data) {
             //product name
-            var resp = data.response.data;
+            var resp = data.response.data.data;
             //name,username,narr,time,type
             app.paginate({
                 title: "Stock History",
@@ -914,6 +914,7 @@ App.prototype.goodsStockHistory = function () {
                         include_nums : true,
                         style : "",
                         mobile_collapse : true,
+                        show_prev_next : true,
                         summarize : {
                             cols : [6],
                             lengths : [30]
@@ -1043,7 +1044,7 @@ App.prototype.stockHistory = function () {
     else if(type === "commission_history"){
         app.reportHistory({
             success : function(data){
-               var resp = data.response.data;
+               var resp = data.response.data.data;
                 app.paginate({
                     title: "Commissions",
                     save_state: true,
@@ -1067,6 +1068,7 @@ App.prototype.stockHistory = function () {
                             include_nums : true,
                             style : "",
                             mobile_collapse : true,
+                            show_prev_next : true,
                             transform : {
                                 2 : function(value,index){ //transform col 2 values to money
                                     if(index === (resp.PRODUCT_NAME.length - 1))
@@ -1088,7 +1090,7 @@ App.prototype.stockHistory = function () {
     else if(type === "tax_history"){
         app.reportHistory({
             success : function(data){
-                var resp = data.response.data;
+                var resp = data.response.data.data;
                 app.paginate({
                     title: "Taxes",
                     save_state: true,
@@ -1112,6 +1114,7 @@ App.prototype.stockHistory = function () {
                             include_nums : true,
                             style : "",
                             mobile_collapse : true,
+                            show_prev_next : true,
                             transform : {
                                 2 : function(value,index){ //transform col 2 values to money
                                     if(index === (resp.PRODUCT_NAME.length - 1))
@@ -1133,7 +1136,7 @@ App.prototype.stockHistory = function () {
     else if(type === "supplier_history"){
       app.reportHistory({
             success : function(data){
-                var r = data.response.data;
+                var r = data.response.data.data;
                 var totalAmount = 0;
                 var totalUnits = 0;
                 app.paginate({
@@ -1149,6 +1152,7 @@ App.prototype.stockHistory = function () {
                             include_nums: true,
                             style: "",
                             mobile_collapse: true,
+                            show_prev_next : true,
                             summarize : {
                                 cols : [5],
                                 lengths : [30]
@@ -1491,7 +1495,7 @@ App.prototype.saveBusiness = function (actionType) {
         };
     }
    
-    var svc = actionType === "delete" ? "open_data_service,pos_admin_service" : "open_data_service";
+    var svc = actionType === "delete" ? "closed_data_service,pos_admin_service" : "closed_data_service";
     var msg = actionType === "delete" ? "save_business,delete_business" : "save_business";
     app.xhr({
         data : request,
@@ -1499,8 +1503,8 @@ App.prototype.saveBusiness = function (actionType) {
         message : msg,
         load: true,
         success: function (data) {
-            var resp = actionType === "delete" ? data.response.open_data_service_save_business.data : data.response.data;
-            var reason = actionType === "delete" ? data.response.open_data_service_save_business.reason : data.response.reason;
+            var resp = actionType === "delete" ? data.response.closed_data_service_save_business.data : data.response.data;
+            var reason = actionType === "delete" ? data.response.closed_data_service_save_business.reason : data.response.reason;
             if (resp === "success") {
                 app.showMessage(app.context.action_success);
                 alert("Business settings changed, please sign in again");
@@ -1693,7 +1697,7 @@ App.prototype.payBill = function () {
                     //load the amount due
                     app.xhr({
                         data : {},
-                        service : "open_data_service",
+                        service : "closed_data_service",
                         message : "fetch_account_balance",
                         load: true,
                         success: function (resp) {
@@ -1709,7 +1713,7 @@ App.prototype.payBill = function () {
 App.prototype.billingHistory = function(){
     app.xhr({
         data : {},
-        service : "open_data_service",
+        service : "closed_data_service",
         message : "billing_history",
         load: true,
         success: function (resp) {
@@ -1755,7 +1759,7 @@ App.prototype.verifyPayBill = function () {
     };
     app.xhr({
         data : requestData,
-        service : "open_data_service",
+        service : "closed_data_service",
         message : "verify_bill_mpesa",
         load: true,
         success: function (resp) {
@@ -1773,7 +1777,7 @@ App.prototype.verifyPayBill = function () {
 App.prototype.currentBillTier = function(){
     app.xhr({
         data: {},
-        service: "open_data_service",
+        service: "closed_data_service",
         message: "current_bill_tier",
         load: true,
         success: function (resp) {

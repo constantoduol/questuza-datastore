@@ -225,12 +225,12 @@ AppData.prototype.onload = {
         //check billing and settings
         app.xhr({
             data : {},
-            service : "open_data_service,open_data_service",
+            service : "closed_data_service,open_data_service",
             message : "fetch_account_balance,fetch_settings",
             load: false,
             success: function (resp) {
-                var amount = parseFloat(resp.response.open_data_service_fetch_account_balance.data.balance);
-                var timestamp = parseInt(resp.response.open_data_service_fetch_account_balance.data.timestamp);
+                var amount = parseFloat(resp.response.closed_data_service_fetch_account_balance.data.balance);
+                var timestamp = parseInt(resp.response.closed_data_service_fetch_account_balance.data.timestamp);
                 var diff = $.now() - timestamp;
                 var currency = !app.getSetting("billing_currency") ? "" : app.getSetting("billing_currency");
                 if (amount > 0 && diff > 259200000) { //3 days after invoicing

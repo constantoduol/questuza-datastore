@@ -1,8 +1,3 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 function UI() {
 
@@ -126,6 +121,7 @@ UI.prototype.table = function (options) {
             table.attr(attrName,attrValue);
         });
     }
+    
     for (var x = 0; x < options.headers.length; x++) {
         var th = $("<th>");
         th.html(options.headers[x]);
@@ -181,5 +177,12 @@ UI.prototype.table = function (options) {
     $("#" + options.id_to_append).append(table);
     table.addClass(options.class);
     if(options.onRender) options.onRender(id); //say that the table has finished rendering
+    if(options.show_prev_next){
+        //incase we need to show a prev and next button
+        $("#" + options.id_to_append).append("<div class='paginate_navigate'>\n\
+                <img src='img/back.png' alt='Previou' id='paginate_back' title='Previous' class='paginate_round_icon'>\n\
+                <img src='img/forward.png' alt='Next' id='paginate_back' title='Next' class='paginate_round_icon'>\n\
+         </div>");
+    }
     return id;
 };

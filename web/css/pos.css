@@ -84,6 +84,16 @@ body {
     background-color: lightblue;
 }
 
+.paginate_navigate {
+    
+}
+
+.paginate_navigate img {
+    border-radius: 50px;
+    background-color: lightblue;
+    cursor: pointer;
+}
+
 #sale_area {
     margin-top : 20px;
 }

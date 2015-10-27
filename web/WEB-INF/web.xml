@@ -56,13 +56,15 @@
             <param-value>
              com.quest.pos.PosAdminService,
              com.quest.pos.PosSaleService,
+             com.quest.pos.PosMiddleService,
              com.quest.access.useraccess.services.UserService,
-             com.quest.access.useraccess.services.OpenDataService
+             com.quest.access.useraccess.services.OpenDataService,
+             com.quest.access.useraccess.services.ClosedDataService
             </param-value>
         </init-param>
          <init-param>
             <param-name>grant-init-privileges</param-name>
-            <param-value>pos_admin_service,user_service,pos_sale_service</param-value>
+            <param-value>pos_admin_service,user_service,pos_sale_service,closed_data_service</param-value>
         </init-param>
          <init-param>
             <param-name>grant-init-users</param-name>

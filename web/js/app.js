@@ -140,7 +140,7 @@ App.prototype.xhr = function (options) {
                 var cont1 = {response: {data: ""}};
                 var cont2 = {response: {data: ""}};
                 var itemByIdKey = app.dominant_privilege + "_fetch_item_by_id";
-                var cacheKey = options.cache_update.cache_key;
+                var cacheKey = options.cache_update.cache_key();
                 cont1.response.data = data.response[originalService + "_" + originalMessage].data;
                 cont1.response._cache_status_ = data.response._cache_status_;
                 cont2.response.data = data.response[itemByIdKey].data;
@@ -291,7 +291,7 @@ App.prototype.getUrlParameter = function (name) {
 
 App.prototype.localAutocomplete = function(field,process){
     var auto = field.autocomplete;
-    var key = auto.cache_source.service + "_" + auto.cache_source.message;
+    var key = auto.cache_source.service() + "_" + auto.cache_source.message();
     var cacheString = localStorage.getItem(key);
     auto.cache_source.filters.business_id = localStorage.getItem("business_id");
     function cacheSearch(cacheString) {
@@ -334,8 +334,8 @@ App.prototype.localAutocomplete = function(field,process){
         //we do a full request
         app.xhr({
             data: auto.cache_source.filters,
-            service: auto.cache_source.service,
-            message: auto.cache_source.message,
+            service: auto.cache_source.service(),
+            message: auto.cache_source.message(),
             load: false,
             cache: true,
             success: function (data) {

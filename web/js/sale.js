@@ -218,7 +218,15 @@ App.prototype.commitSale = function () {
                 cache_update : {
                     entity : "PRODUCT_DATA",
                     columns : ["ID","PRODUCT_QTY"],
-                    cache_key : "pos_sale_service_all_products",
+                    cache_key : function(){
+                        var userInterface = app.getSetting("user_interface");
+                        if(userInterface === "touch"){
+                            return app.dominant_privilege + "_load_products";
+                        }
+                        else if(userInterface === "desktop"){
+                            return app.dominant_privilege+"_all_products"
+                        }
+                    },
                     where_cols : function(){return [];},
                     where_values : function(){return [];},
                     updater : function(data,cache){
@@ -246,6 +254,7 @@ App.prototype.commitSale = function () {
                             if(cacheString){
                                 //we have the cache string 
                                 var touchCache = JSON.parse(cacheString);
+                                console.log(touchCache);
                                 $.each(touchCache.cache_data, function (x) {
                                     var cacheData = touchCache.cache_data[x];
                                     var allProductData = cacheData.response.data.all_products;
@@ -394,7 +403,7 @@ App.prototype.todaySales = function (username,category) {
                 message : "stock_history",
                 load: true,
                 success: function (data) {
-                    var resp = data.response.data;
+                    var resp = data.response.data.data;
                     //name,username,narr,time,type
                     app.paginate({
                         title: "Todays Sales",
@@ -459,6 +468,7 @@ App.prototype.todaySales = function (username,category) {
                                 include_nums: true,
                                 style: "",
                                 mobile_collapse: true,
+                                show_prev_next : true,
                                 summarize: {
                                     cols: [4],
                                     lengths: [80]

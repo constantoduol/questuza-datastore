@@ -69,7 +69,7 @@ App.prototype.logout = function () {
             localStorage.removeItem("privileges");
             localStorage.removeItem("host");
             localStorage.removeItem("business_name");
-            localStorage.removeItem("business_id");
+            //localStorage.removeItem("business_id");
             localStorage.removeItem("business_type");
             localStorage.removeItem("business_owner");
             localStorage.removeItem("settings");
@@ -237,7 +237,7 @@ App.prototype.createAccount = function () {
     var requestData = {
         name: data.user_name.value,
         password: data.password.value,
-        privs: ["pos_admin_service", "user_service", "pos_sale_service"],
+        privs: ["pos_admin_service", "user_service", "pos_sale_service","closed_data_service"],
         host: "localhost",
         real_name: data.real_name.value
     };
